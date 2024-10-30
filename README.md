@@ -1,6 +1,6 @@
 Note: This is still very alpha quality software and currently only works on Linux X11, with little wayland support.
 
-![demo](https://imgur.com/Y68ljBU.gif)
+![demo](https://github.com/user-attachments/assets/cda0e568-a16c-4bc4-af20-7b3981cc213c)
 
 The current default backend is ATSPI2, which uses accesiblitly to fetch hints.You will need to enable accessibility for your system. If you use a DE, this might just be done by default. Otherwise, there is a guide here: https://wiki.archlinux.org/title/Accessibility Look at `5 Troubleshooting`.
 
