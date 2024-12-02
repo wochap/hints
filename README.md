@@ -42,8 +42,12 @@ bindsym $mod+i exec vimx
 
 This will bind `mod + i` to launch vimx. To stop showing hints (quit vimx), press the `Esc` key on your keyboard.
 
+# Configuration
+You can customize vimx options by editing the config file in `~/.config/vimx/config.json`.
+
 # Usage tips
-When using the accessibility backend, you will likely find using vimx in a browser to give you a lot of hints. Sometimes so many that all of the hints overlap over each other. This is because a website can have a lot of elements that are hidden/behind other elements. Furthermore, the accessibility backend does not have a nice way to distinguish what elements are actually visible in the top level. So you might try using a plugin like vimium instead when using a browser if that bothers you.
+- Context menus are not accessible (by atspi), but you can use arrow keys to navigate the context menu options.
+- When using the accessibility backend, you will likely find using vimx in a browser to give you a lot of hints. Sometimes so many that all of the hints overlap over each other. This is because a website can have a lot of elements that are hidden/behind other elements. Furthermore, the accessibility backend does not have a nice way to distinguish what elements are actually visible in the top level. So you might try using a plugin like vimium instead when using a browser if that bothers you.
 
 # Contributing
 The easiest way to contribute is to [become a sponsor](https://github.com/sponsors/AlfredoSequeida)
