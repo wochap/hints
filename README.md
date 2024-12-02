@@ -62,7 +62,7 @@ python3 -m venv venv --system-site-packages
 3. Install vimx as an editable package (from the repositorie's root directory):
 
 ```
-pip install .
+pip install -e .
 ```
 At this point, vimx should be installed locally in the virtual environment, you can run `vimx` in your shell to launch it. Any edits you make to the source code will automatically update the installation. For future development work, you can simply re-enable the virtual environment (step 2).
 
