@@ -1,10 +1,13 @@
 #! /usr/bin/python
 
 from itertools import product
+from json import load
 from math import ceil, log
+from os import path
 from string import ascii_lowercase
 from subprocess import run
 from sys import platform
+from typing import Any
 
 from gi import require_version
 
@@ -46,10 +49,23 @@ def get_hints(children: set) -> dict[str, tuple[int, int]]:
     return hints
 
 
+def load_config() -> dict[str, Any]:
+    """Load Json config file
+    :return: config object
+    """
+    config = {}
+
+    with open(path.join(path.expanduser("~"), ".config/vimx/config.json")) as _f:
+        config = load(_f)
+
+    return config
+
+
 def main():
     """vimx entry point."""
 
     system = None
+    config = load_config()
 
     if "linux" in platform:
         from vimx.platform_utils import linux as system
@@ -64,7 +80,7 @@ def main():
         hints = get_hints(chidren)
 
         click = {}
-        app = Window(w, h, hints=hints, click=click)
+        app = Window(w, h, hints=hints, click=click, **config["hints"])
 
         # wayland
         if IS_WAYLAND:
