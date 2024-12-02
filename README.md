@@ -22,7 +22,7 @@ Note: This is still work in progress and only works on Linux X11, with little wa
 
 5. Install [pipx](https://pipx.pypa.io/stable/installation/)
 
-6. Install [xdotool](https://github.com/jordansissel/xdotool)
+6. Install [xdotool](https://github.com/jordansissel/xdotool#installation)
 
 ## Installing vimx
 
