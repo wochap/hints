@@ -1,18 +1,32 @@
 #!/usr/bin/env python
-from subprocess import run
+from typing import Any
 
-import gi
 import cairo
+from gi import require_foreign, require_version
 
-gi.require_version("Gtk", "3.0")
-gi.require_foreign("cairo")
-from gi.repository import Gtk, Gdk
+require_version("Gtk", "3.0")
+require_version("Gdk", "3.0")
+require_foreign("cairo")
+
+from gi.repository import Gdk, Gtk
 
 
 class Window(Gtk.Window):
-    """Composite widget"""
+    """Composite widget to overlay hints over a window."""
 
-    def __init__(self, x, y, width, height, hints, click):
+    def __init__(
+        self,
+        width: float,
+        height: float,
+        hints: dict[str, tuple[int, int]],
+        click: dict[str, Any],
+    ):
+        """Hint overlay constructor.
+        :param width: Window width.
+        :param height: Window height.
+        :param hints: Hints to draw.
+        :param click: Click to send.
+        """
         super().__init__(1)
 
         self.width = width
@@ -30,23 +44,16 @@ class Window(Gtk.Window):
         # window setup
         self.set_app_paintable(True)
         self.set_decorated(True)
-        # self.set_keep_above(True)
-        # self.move(x, y)
-        # self.resize(self.width, self.height)
         self.set_accept_focus(True)
         self.set_sensitive(True)
         self.set_default_size(self.width, self.height)
-        # self.set_default_size(1000, 1000)
-        # self.present()
 
         self.da = Gtk.DrawingArea()
 
-        # keycont = Gtk.EventControllerKey()
-        # keycont.connect("key-pressed", self.on_key_press)
         self.connect("destroy", Gtk.main_quit)
         self.connect("key-press-event", self.on_key_press)
         self.connect("show", self.on_grab)
-        self.da.connect("draw", self.da_draw_event)
+        self.da.connect("draw", self.on_draw)
 
         def put_in_frame(widget):
             frame = Gtk.Frame(label=None)
@@ -60,8 +67,10 @@ class Window(Gtk.Window):
         self.add(vpaned)
         vpaned.pack1(put_in_frame(self.da), True, True)
 
-    def da_draw_event(self, _, cr):
-
+    def on_draw(self, _, cr):
+        """Draw hints.
+        :param cr: Cairo object.
+        """
         hint_height = 40
 
         cr.select_font_face("Sans", cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD)
@@ -93,29 +102,25 @@ class Window(Gtk.Window):
                 cr.restore()
 
     def on_key_press(self, _, event):
+        """Handle key presses
+        :param event: Event object.
+        """
         keymap = Gdk.Keymap.get_default()
 
-        # Instead of using event.keyval, we do it the lowlevel way.
-        # Reason: ignoring CAPSLOCK and checking if SHIFT was pressed
         state = Gdk.ModifierType(event.state & ~Gdk.ModifierType.LOCK_MASK)
         res = keymap.translate_keyboard_state(
             event.hardware_keycode,
             state,
-            # https://github.com/mypaint/mypaint/issues/974
-            # event.group)
             1,
         )
 
         keyval = res[1]
         consumed_modifiers = res[4]
 
-        # We want to ignore irrelevant modifiers like ScrollLock.  The stored
-        # key binding does not include modifiers that affected its keyval.
         modifiers = (
             event.state & Gtk.accelerator_get_default_mod_mask() & ~consumed_modifiers
         )
 
-        # Except that key bindings are always stored in lowercase.
         keyval_lower = Gdk.keyval_to_lower(keyval)
 
         if keyval_lower != keyval:
@@ -127,6 +132,7 @@ class Window(Gtk.Window):
 
         # select hint
         next_hint_char = chr(keyval_lower)
+
         # only update selector state if next char makes up a possible valid hint
         if self.hint_selector_state + next_hint_char in {
             choice[: len(self.hint_selector_state) + 1] for choice in self.hints
@@ -142,6 +148,9 @@ class Window(Gtk.Window):
                 self.click["button"] = "right" if self.right_click else "left"
 
     def on_grab(self, window):
+        """Force keyboard grab to listen for keybaord events.
+        :param window: Window object.
+        """
         while (
             Gdk.keyboard_grab(window.get_window(), False, Gdk.CURRENT_TIME)
             != Gdk.GrabStatus.SUCCESS
@@ -149,6 +158,7 @@ class Window(Gtk.Window):
             pass
 
 
+# Useful for testing hints on the fly by calling module
 if __name__ == "__main__":
     res_x = 2560
     res_y = 1440
@@ -157,7 +167,6 @@ if __name__ == "__main__":
         0,
         res_x,
         res_y,
-        # hints={(10, 10), (30, 10)},
         hints={(10, 10), (300, 10)},
     )
     app.connect("destroy", Gtk.main_quit)

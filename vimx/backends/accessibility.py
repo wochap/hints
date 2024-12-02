@@ -1,10 +1,25 @@
 import pyatspi
-from gi.repository.GLib import GError
+
+from .exceptions import (AccessibleChildrenNotFoundError,
+                         CouldNotFindAccessibleWindow)
 
 
-def get_children_of_interest(index, root, children):
+def get_children_of_interest(
+    index: int,
+    root: pyatspi.Atspi.Accessible,
+    state_conditions: list[int],
+    children: set,
+) -> set[tuple[int, int]]:
+    """Get Atspi Accessible children that match a given set of states recursively.
+
+    :param index: Starting child index for root.
+    :param root: Starting child.
+    :param state_condtions: The conditions to match children against.
+    :param children: Set of coordinates for children to use to store found children coordinates.
+    :return: All matched centered children coordinates.
+    """
+
     states = pyatspi.Atspi.StateSet()
-    # attributes = {}
     x = -1
     y = -1
     width = 0
@@ -12,7 +27,6 @@ def get_children_of_interest(index, root, children):
 
     try:
         states = root.get_state_set()
-        # attributes = root.get_attributes()
         pos = root.get_position(pyatspi.DESKTOP_COORDS)
 
         x = pos.x
@@ -23,49 +37,46 @@ def get_children_of_interest(index, root, children):
     except:
         pass
 
-    if (
-        x >= 0
-        and y >= 0
-        # and root.get_child_count() == 0
-        # and attributes.get("hidden", "false") == "false"
-        # and states.contains(
-        #    pyatspi.state.STATE_SENSITIVE,
-        # )
-        and all(
-            states.contains(state)
-            for state in [
-                pyatspi.state.STATE_SENSITIVE,
-                pyatspi.state.STATE_ENABLED,
-                pyatspi.state.STATE_VISIBLE,
-                pyatspi.state.STATE_SHOWING,
-            ]
-        )
-        # and any(
-        #    states.contains(state)
-        #    for state in [
-        #        # pyatspi.state.STATE_ENABLED,
-        #        pyatspi.state.STATE_VISIBLE,
-        #        pyatspi.state.STATE_SHOWING,
-        #    ]
-        # )
-    ):
+    if x >= 0 and y >= 0 and all(states.contains(state) for state in state_conditions):
         children.add((x + width / 2, y + length / 2))
 
     for child in root:
-        get_children_of_interest(index + 1, child, children)
+        get_children_of_interest(index + 1, child, state_conditions, children)
 
     return children
 
 
-def active_window():
+def active_window() -> pyatspi.Atspi.Accessible:
+    """Get the current accessible window in focus."""
+
     desktop = pyatspi.Registry.getDesktop(0)
     for app in desktop:
         for window in app:
             if window.getState().contains(pyatspi.STATE_ACTIVE):
                 return window
 
+    raise CouldNotFindAccessibleWindow()
 
-def get_children():
-    children = set()
-    get_children_of_interest(0, active_window(), children)
+
+def get_children() -> set[tuple[int, int]]:
+    """Get coordinates of children.
+    :return: centered children coordinates.
+    """
+    children: set[tuple[int, int]] = set()
+    window = active_window()
+    get_children_of_interest(
+        0,
+        window,
+        [
+            pyatspi.STATE_SENSITIVE,
+            pyatspi.STATE_ENABLED,
+            pyatspi.STATE_VISIBLE,
+            pyatspi.STATE_SHOWING,
+        ],
+        children,
+    )
+
+    if not children:
+        raise AccessibleChildrenNotFoundError(active_window)
+
     return children
