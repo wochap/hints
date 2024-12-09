@@ -6,7 +6,7 @@ from math import ceil, log
 from os import path
 from string import ascii_lowercase
 from subprocess import run
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Iterable
 
 from gi import require_version
 
@@ -28,7 +28,7 @@ require_version("Gtk", "3.0")
 from gi.repository import Gtk
 
 
-def get_hints(children: set, alphabet: str = ascii_lowercase) -> dict[str, Child]:
+def get_hints(children: set, alphabet: Iterable = ascii_lowercase) -> dict[str, Child]:
     """Get hints.
 
     :param children: The children elements of windown that indicate the
@@ -68,7 +68,14 @@ def main():
     config = load_config()
 
     window_extents, chidren = get_children()
-    hints = get_hints(chidren, alphabet=config.get("alphabet", ascii_lowercase))
+    hints = get_hints(
+        chidren,
+        alphabet={
+            character
+            for character in config.get("alphabet", ascii_lowercase)
+            if not character.isdigit()
+        },
+    )
 
     if window_extents and hints:
         click = {}
