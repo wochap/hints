@@ -50,7 +50,10 @@ This will bind `mod + i` to launch hints. To stop showing hints (quit hints), pr
 For a guide on configuring and using hints, please see the [Wiki](https://github.com/AlfredoSequeida/hints/wiki).
 
 # Contributing
-The easiest way to contribute is to [become a sponsor](https://github.com/sponsors/AlfredoSequeida)
+The easiest ways to contribute are to:
+- [Become a sponsor](https://github.com/sponsors/AlfredoSequeida). Hints is a passion project that I really wanted for myself and I am working on it on my spare time. I chose to make it free and open source so that others can benefit. If you find it valuable, donating is a nice way to say thanks. You can donate any amount you want.
+- Report bugs. If you notice something is not working as expected or have an idea on how to make hints better, [open up an issue](https://github.com/AlfredoSequeida/hints/issues/new). This helps everyone out.
+- If you can code, feel free to commit some code! You can see if any issues need solutions or you can create a new feature. If you do want to create a new feature, it's a good idea to create an issue first so we can align on why this feature is needed and if it has a possibility of being merged. 
 
 ## Development
 If you want to help develop hints, first setup your environment:
