@@ -46,12 +46,8 @@ bindsym $mod+i exec hints
 
 This will bind `mod + i` to launch hints. To stop showing hints (quit hints), press the `Esc` key on your keyboard.
 
-# Configuration
-You can customize hints options by editing the config file in `~/.config/hints/config.json`.
-
-# Usage tips
-- Context menus are not accessible (by atspi), but you can use arrow keys to navigate the context menu options.
-- When using the accessibility backend, you will likely find using hints in a browser to give you a lot of hints. Sometimes so many that all of the hints overlap over each other. This is because a website can have a lot of elements that are hidden/behind other elements. Furthermore, the accessibility backend does not have a nice way to distinguish what elements are actually visible in the top level. So you might try using a plugin like vimium instead when using a browser if that bothers you.
+# Documentation
+For a guide on configuring and using hints, please see the [Wiki](https://github.com/AlfredoSequeida/hints/wiki).
 
 # Contributing
 The easiest way to contribute is to [become a sponsor](https://github.com/sponsors/AlfredoSequeida)
