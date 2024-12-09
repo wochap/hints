@@ -1,5 +1,9 @@
 Note: This is still work in progress and only works on Linux X11, with little wayland support.
 
+<p align="center">
+  <img src="https://github.com/user-attachments/assets/bca7fb8e-a4ad-435b-aa40-c26dbb017239" alt="hints" />
+</p>
+
 ![demo](https://github.com/user-attachments/assets/cda0e568-a16c-4bc4-af20-7b3981cc213c)
 
 # Installing
