@@ -32,10 +32,14 @@ class Window(Gtk.Window):
         hint_width_padding=10,
         hint_font_size=20,
         hint_font_face="Sans",
-        hint_font_background_r=1,
-        hint_font_background_g=81,
-        hint_font_background_b=0.30,
-        hint_font_background_a=0.6,
+        hint_font_r=0,
+        hint_font_g=0,
+        hint_font_b=0,
+        hint_font_a=1,
+        hint_background_r=1,
+        hint_background_g=81,
+        hint_background_b=0.30,
+        hint_background_a=0.6,
     ):
         """Hint overlay constructor.
 
@@ -57,12 +61,18 @@ class Window(Gtk.Window):
         # hint settings
         self.hint_height = hint_height
         self.hint_width_padding = hint_width_padding
+
         self.hint_font_size = hint_font_size
         self.hint_font_face = hint_font_face
-        self.hint_font_background_r = hint_font_background_r
-        self.hint_font_background_g = hint_font_background_g
-        self.hint_font_background_b = hint_font_background_b
-        self.hint_font_background_a = hint_font_background_a
+        self.hint_font_r = hint_font_r
+        self.hint_font_g = hint_font_g
+        self.hint_font_b = hint_font_b
+        self.hint_font_a = hint_font_a
+
+        self.hint_background_r = hint_background_r
+        self.hint_background_g = hint_background_g
+        self.hint_background_b = hint_background_b
+        self.hint_background_a = hint_background_a
 
         # composite setup
         screen = self.get_screen()
@@ -122,10 +132,10 @@ class Window(Gtk.Window):
 
                 cr.rectangle(0, 0, hint_width, hint_height)
                 cr.set_source_rgba(
-                    self.hint_font_background_r,
-                    self.hint_font_background_g,
-                    self.hint_font_background_b,
-                    self.hint_font_background_a,
+                    self.hint_background_r,
+                    self.hint_background_g,
+                    self.hint_background_b,
+                    self.hint_background_a,
                 )
                 cr.fill()
 
@@ -134,8 +144,12 @@ class Window(Gtk.Window):
                     (hint_height / 2) - (height / 2 + y_bearing),
                 )
 
-                # cr.move_to(x_bearing, y_bearing)
-                cr.set_source_rgb(0, 0, 0)
+                cr.set_source_rgba(
+                    self.hint_font_r,
+                    self.hint_font_g,
+                    self.hint_font_b,
+                    self.hint_font_a,
+                )
                 cr.show_text(utf8)
                 cr.close_path()
                 cr.restore()

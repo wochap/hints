@@ -69,7 +69,6 @@ def main():
 
     window_extents, chidren = get_children()
     hints = get_hints(chidren, alphabet=config.get("alphabet", ascii_lowercase))
-    # hints = get_hints(chidren)
 
     if window_extents and hints:
         click = {}
@@ -93,9 +92,10 @@ def main():
         app.show_all()
         Gtk.main()
 
-        for _ in range(click["repeat"]):
-            run(
-                f"xdotool mousemove {click.get('x')} {click.get('y')}; xdotool click {'3' if click.get('button') =="right" else '1'}",
-                check=False,
-                shell=True,
-            )
+        if click:
+            for _ in range(click["repeat"]):
+                run(
+                    f"xdotool mousemove {click.get('x')} {click.get('y')}; xdotool click {'3' if click.get('button') =="right" else '1'}",
+                    check=False,
+                    shell=True,
+                )
