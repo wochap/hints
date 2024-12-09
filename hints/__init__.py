@@ -1,4 +1,4 @@
-"""Vimx."""
+"""Hints."""
 
 from json import dump
 from os import environ, makedirs, path
@@ -18,7 +18,7 @@ __config__ = {
 }
 
 
-dir_path_to_conf = path.join(path.expanduser("~"), ".config/vimx")
+dir_path_to_conf = path.join(path.expanduser("~"), ".config/hints")
 
 if "XDG_CONFIG_HOME" in environ:
     dir_path_to_conf = environ["XDG_CONFIG_HOME"]

@@ -23,20 +23,20 @@ def find_version(*file_paths):
     raise RuntimeError("Unable to find version string.")
 
 
-dynamic_version = find_version("vimx", "__init__.py")
+dynamic_version = find_version("hints", "__init__.py")
 
 setup(
-    name="vimx",
+    name="hints",
     version=dynamic_version,
     author="Alfredo Sequeida",
-    description="Vimx aims to be a crossplaform vimium-like application for your entire desktop",
+    description='Hints lets you navigate GUI applications in Linux without your mouse by displaying "hints" you can type on your keyboard to interact with GUI elements.',
     long_description=long_description,
     long_description_content_type="text/markdown",
-    url="https://github.com/AlfredoSequeida/vimx",
-    download_url="https://github.com/AlfredoSequeida/vimx/archive/"
+    url="https://github.com/AlfredoSequeida/hints",
+    download_url="https://github.com/AlfredoSequeida/hints/archive/"
     + dynamic_version
     + ".tar.gz",
-    keywords="vimx vimium mouseless keybaordnaviation",
+    keywords="vim vimium mouseless keybaordnaviation linux x11 wayland",
     platforms="any",
     classifiers=[
         "Intended Audience :: End Users/Desktop",
@@ -58,12 +58,12 @@ setup(
     ],
     license="MIT",
     packages=[
-        "vimx",
-        "vimx.platform_utils",
-        "vimx.backends",
-        "vimx.hud",
+        "hints",
+        "hints.platform_utils",
+        "hints.backends",
+        "hints.hud",
     ],
     include_package_data=True,
     install_requires=["PyGObject"],
-    entry_points={"console_scripts": ["vimx = vimx.vimx:main"]},
+    entry_points={"console_scripts": ["hints = hints.hints:main"]},
 )

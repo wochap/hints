@@ -56,7 +56,7 @@ def load_config() -> dict[str, Any]:
     config = {}
 
     with open(
-        path.join(path.expanduser("~"), ".config/vimx/config.json"), encoding="utf-8"
+        path.join(path.expanduser("~"), ".config/hints/config.json"), encoding="utf-8"
     ) as _f:
         config = load(_f)
 
@@ -64,7 +64,7 @@ def load_config() -> dict[str, Any]:
 
 
 def main():
-    """Vimx entry point."""
+    """Hints entry point."""
 
     config = load_config()
 
