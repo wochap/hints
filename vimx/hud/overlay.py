@@ -1,5 +1,8 @@
-#!/usr/bin/env python
-from typing import Any
+"""Overlay to display hints over an application window."""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
 
 import cairo
 from gi import require_foreign, require_version
@@ -10,15 +13,20 @@ require_foreign("cairo")
 
 from gi.repository import Gdk, Gtk
 
+if TYPE_CHECKING:
+    from ..child import Child
+
 
 class Window(Gtk.Window):
     """Composite widget to overlay hints over a window."""
 
     def __init__(
         self,
-        width: float,
-        height: float,
-        hints: dict[str, tuple[int, int]],
+        x_pos: int,
+        y_pos: int,
+        width: int,
+        height: int,
+        hints: dict[str, Child],
         click: dict[str, Any],
         hint_height=40,
         hint_width_padding=10,
@@ -30,6 +38,7 @@ class Window(Gtk.Window):
         hint_font_background_a=0.6,
     ):
         """Hint overlay constructor.
+
         :param width: Window width.
         :param height: Window height.
         :param hints: Hints to draw.
@@ -61,10 +70,11 @@ class Window(Gtk.Window):
 
         # window setup
         self.set_app_paintable(True)
-        self.set_decorated(True)
+        self.set_decorated(False)
         self.set_accept_focus(True)
         self.set_sensitive(True)
         self.set_default_size(self.width, self.height)
+        self.move(x_pos, y_pos)
 
         self.drawing_area = Gtk.DrawingArea()
 
@@ -97,8 +107,8 @@ class Window(Gtk.Window):
         )
         cr.set_font_size(self.hint_font_size)
 
-        for hint_value, pos in self.hints.items():
-            x_loc, y_loc = pos
+        for hint_value, child in self.hints.items():
+            x_loc, y_loc = child.relative_position
             if x_loc >= 0 and y_loc >= 0:
                 cr.save()
                 utf8 = hint_value
@@ -122,6 +132,8 @@ class Window(Gtk.Window):
                     (hint_width / 2) - (width / 2 + x_bearing),
                     (hint_height / 2) - (height / 2 + y_bearing),
                 )
+
+                # cr.move_to(x_bearing, y_bearing)
                 cr.set_source_rgb(0, 0, 0)
                 cr.show_text(utf8)
                 cr.close_path()
@@ -146,9 +158,7 @@ class Window(Gtk.Window):
         self.drawing_area.queue_draw()
 
     def on_key_press(self, _, event):
-        """Handle key presses
-        :param event: Event object.
-        """
+        """Handle key presses :param event: Event object."""
         keymap = Gdk.Keymap.get_default()
 
         state = Gdk.ModifierType(event.state & ~Gdk.ModifierType.LOCK_MASK)
@@ -179,7 +189,7 @@ class Window(Gtk.Window):
         if len(self.hints) == 1:
             Gdk.keyboard_ungrab(event.time)
             self.destroy()
-            x, y = self.hints[self.hint_selector_state]
+            x, y = self.hints[self.hint_selector_state].absolute_position
             self.click["x"] = x
             self.click["y"] = y
             # self.click["button"] = "0xC1" if self.right_click else "0xC0"
@@ -187,6 +197,7 @@ class Window(Gtk.Window):
 
     def on_grab(self, window):
         """Force keyboard grab to listen for keybaord events.
+
         :param window: Window object.
         """
         while (

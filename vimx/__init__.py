@@ -1,4 +1,4 @@
-"""Vimx"""
+"""Vimx."""
 
 from json import dump
 from os import environ, makedirs, path

@@ -1,4 +1,4 @@
-#! /usr/bin/python
+from __future__ import annotations
 
 from itertools import product
 from json import load
@@ -6,13 +6,15 @@ from math import ceil, log
 from os import path
 from string import ascii_lowercase
 from subprocess import run
-from sys import platform
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from gi import require_version
 
 from .backends.accessibility import get_children
 from .hud.overlay import Window
+
+if TYPE_CHECKING:
+    from .child import Child
 
 try:
     require_version("GtkLayerShell", "0.1")
@@ -26,14 +28,14 @@ require_version("Gtk", "3.0")
 from gi.repository import Gtk
 
 
-def get_hints(children: set) -> dict[str, tuple[int, int]]:
+def get_hints(children: set) -> dict[str, Child]:
     """Get hints.
 
     :param children: The children elements of windown that indicate the
         absolute position of those elements.
     :return: The hints. Ex {"ab": (0,0), "ac": (10,100)}
     """
-    hints: dict[str, tuple[int, int]] = {}
+    hints: dict[str, Child] = {}
 
     if len(children) == 0:
         return hints
@@ -50,39 +52,37 @@ def get_hints(children: set) -> dict[str, tuple[int, int]]:
 
 
 def load_config() -> dict[str, Any]:
-    """Load Json config file
-    :return: config object
-    """
+    """Load Json config file :return: config object."""
     config = {}
 
-    with open(path.join(path.expanduser("~"), ".config/vimx/config.json")) as _f:
+    with open(
+        path.join(path.expanduser("~"), ".config/vimx/config.json"), encoding="utf-8"
+    ) as _f:
         config = load(_f)
 
     return config
 
 
 def main():
-    """vimx entry point."""
+    """Vimx entry point."""
 
-    system = None
     config = load_config()
 
-    if "linux" in platform:
-        from vimx.platform_utils import linux as system
-    elif "win32" in platform:
-        raise NotImplementedError("Windows not supported yet.")
-    elif "darwin" in platform:
-        raise NotImplementedError("OSX not supported yet.")
+    window_extents, chidren = get_children()
+    hints = get_hints(chidren)
 
-    if system:
-        w, h = system.get_screen_resolution()
-        chidren = get_children()
-        hints = get_hints(chidren)
-
+    if window_extents and hints:
         click = {}
-        app = Window(w, h, hints=hints, click=click, **config["hints"])
+        app = Window(
+            window_extents.x,
+            window_extents.y,
+            window_extents.width,
+            window_extents.height,
+            hints=hints,
+            click=click,
+            **config["hints"],
+        )
 
-        # wayland
         if IS_WAYLAND:
             GtkLayerShell.init_for_window(app)
             GtkLayerShell.auto_exclusive_zone_enable(app)

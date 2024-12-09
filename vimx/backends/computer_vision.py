@@ -1,5 +1,6 @@
-import cv2
 from subprocess import run
+
+import cv2
 
 
 def screenshot():
