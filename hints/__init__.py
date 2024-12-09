@@ -14,7 +14,8 @@ __config__ = {
         "hint_font_background_g": 1,
         "hint_font_background_b": 0.5,
         "hint_font_background_a": 0.6,
-    }
+    },
+    "alphabet": "asdfgqwertzxcvbhjklyuiopnm",
 }
 
 

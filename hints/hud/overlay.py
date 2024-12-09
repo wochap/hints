@@ -50,6 +50,7 @@ class Window(Gtk.Window):
         self.height = height
         self.hints = hints
         self.hint_selector_state = ""
+        self.repeat = 0
         self.right_click = False
         self.click = click
 
@@ -184,7 +185,12 @@ class Window(Gtk.Window):
         if keyval_lower == 65307:  # ESCAPE
             Gtk.main_quit()
 
-        self.update_hints(chr(keyval_lower))
+        hint_chr = chr(keyval_lower)
+
+        if hint_chr.isdigit():
+            self.repeat = int(f"{self.repeat}{hint_chr}")
+
+        self.update_hints(hint_chr)
 
         if len(self.hints) == 1:
             Gdk.keyboard_ungrab(event.time)
@@ -194,6 +200,7 @@ class Window(Gtk.Window):
             self.click["y"] = y
             # self.click["button"] = "0xC1" if self.right_click else "0xC0"
             self.click["button"] = "right" if self.right_click else "left"
+            self.click["repeat"] = self.repeat if self.repeat else 1
 
     def on_grab(self, window):
         """Force keyboard grab to listen for keybaord events.

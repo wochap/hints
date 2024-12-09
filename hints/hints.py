@@ -28,12 +28,13 @@ require_version("Gtk", "3.0")
 from gi.repository import Gtk
 
 
-def get_hints(children: set) -> dict[str, Child]:
+def get_hints(children: set, alphabet: str = ascii_lowercase) -> dict[str, Child]:
     """Get hints.
 
     :param children: The children elements of windown that indicate the
         absolute position of those elements.
-    :return: The hints. Ex {"ab": (0,0), "ac": (10,100)}
+    :param alphabet: The alphabet used to create hints
+    :return: The hints. Ex {"ab": Child, "ac": Child}
     """
     hints: dict[str, Child] = {}
 
@@ -42,9 +43,7 @@ def get_hints(children: set) -> dict[str, Child]:
 
     for child, hint in zip(
         children,
-        product(
-            ascii_lowercase, repeat=ceil(log(len(children)) / log(len(ascii_lowercase)))
-        ),
+        product(alphabet, repeat=ceil(log(len(children)) / log(len(alphabet)))),
     ):
         hints["".join(hint)] = child
 
@@ -69,7 +68,8 @@ def main():
     config = load_config()
 
     window_extents, chidren = get_children()
-    hints = get_hints(chidren)
+    hints = get_hints(chidren, alphabet=config.get("alphabet", ascii_lowercase))
+    # hints = get_hints(chidren)
 
     if window_extents and hints:
         click = {}
@@ -93,8 +93,9 @@ def main():
         app.show_all()
         Gtk.main()
 
-        run(
-            f"xdotool mousemove {click.get('x')} {click.get('y')}; xdotool click {'3' if click.get('button') =="right" else '1'}",
-            check=False,
-            shell=True,
-        )
+        for _ in range(click["repeat"]):
+            run(
+                f"xdotool mousemove {click.get('x')} {click.get('y')}; xdotool click {'3' if click.get('button') =="right" else '1'}",
+                check=False,
+                shell=True,
+            )
