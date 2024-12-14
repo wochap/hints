@@ -6,6 +6,12 @@ Note: This is still work in progress and only works on Linux X11, with little wa
 
 ![demo](https://github.com/user-attachments/assets/cda0e568-a16c-4bc4-af20-7b3981cc213c)
 
+<p align="center">
+  <a href="https://www.keytilt.xyz" target="_blank">
+    <img src="https://github.com/user-attachments/assets/b44f8021-7f1f-4a60-9be4-561662266e96" alt="hints" />
+  </a>
+</p>
+
 # Installing
 
 ## System Requirements
