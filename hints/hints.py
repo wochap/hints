@@ -69,8 +69,11 @@ def load_config() -> dict[str, Any]:
     :return: config object."""
     config = {}
 
-    with open(CONFIG_PATH, encoding="utf-8") as _f:
-        config = load(_f)
+    try:
+        with open(CONFIG_PATH, encoding="utf-8") as _f:
+            config = load(_f)
+    except FileNotFoundError:
+        pass
 
     return config
 
@@ -99,7 +102,7 @@ def hint_mode(config: dict[str, Any], mouse: Controller):
             window_extents.height,
             hints=hints,
             mouse_action=mouse_action,
-            **config["hints"],
+            **config.get("hints", DEFAULT_CONFIG["hints"]),
             exit_key=config.get("exit_key", DEFAULT_CONFIG["exit_key"]),
             hover_modifier=config.get(
                 "hover_modifier", DEFAULT_CONFIG["hover_modifier"]
