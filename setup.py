@@ -2,7 +2,7 @@ import codecs
 import os
 import re
 
-from setuptools import find_packages, setup
+from setuptools import setup
 
 with open("README.md", "r") as fh:
     long_description = fh.read()
@@ -64,6 +64,6 @@ setup(
         "hints.hud",
     ],
     include_package_data=True,
-    install_requires=["PyGObject"],
+    install_requires=["PyGObject", "pynput"],
     entry_points={"console_scripts": ["hints = hints.hints:main"]},
 )

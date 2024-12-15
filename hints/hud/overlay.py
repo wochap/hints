@@ -7,8 +7,10 @@ from typing import TYPE_CHECKING, Any
 import cairo
 from gi import require_foreign, require_version
 
-require_version("Gtk", "3.0")
+from ..constants import DEFAULT_CONFIG
+
 require_version("Gdk", "3.0")
+require_version("Gtk", "3.0")
 require_foreign("cairo")
 
 from gi.repository import Gdk, Gtk
@@ -27,7 +29,7 @@ class Window(Gtk.Window):
         width: int,
         height: int,
         hints: dict[str, Child],
-        click: dict[str, Any],
+        mouse_action: dict[str, Any],
         hint_height=40,
         hint_width_padding=10,
         hint_font_size=20,
@@ -36,17 +38,21 @@ class Window(Gtk.Window):
         hint_font_g=0,
         hint_font_b=0,
         hint_font_a=1,
+        hint_upercase=True,
         hint_background_r=1,
         hint_background_g=81,
         hint_background_b=0.30,
         hint_background_a=0.6,
+        exit_key=DEFAULT_CONFIG["exit_key"],
+        hover_modifier=DEFAULT_CONFIG["hover_modifier"],
+        grab_modifier=DEFAULT_CONFIG["grab_modifier"],
     ):
         """Hint overlay constructor.
 
         :param width: Window width.
         :param height: Window height.
         :param hints: Hints to draw.
-        :param click: Click to send.
+        :param mouse_action: Mouse action to send.
         """
         super().__init__(Gtk.WindowType.POPUP)
 
@@ -54,9 +60,7 @@ class Window(Gtk.Window):
         self.height = height
         self.hints = hints
         self.hint_selector_state = ""
-        self.repeat = 0
-        self.right_click = False
-        self.click = click
+        self.mouse_action = mouse_action
 
         # hint settings
         self.hint_height = hint_height
@@ -68,11 +72,16 @@ class Window(Gtk.Window):
         self.hint_font_g = hint_font_g
         self.hint_font_b = hint_font_b
         self.hint_font_a = hint_font_a
+        self.hint_upercase = hint_upercase
 
         self.hint_background_r = hint_background_r
         self.hint_background_g = hint_background_g
         self.hint_background_b = hint_background_b
         self.hint_background_a = hint_background_a
+
+        self.exit_key = exit_key
+        self.grab_modifier = grab_modifier
+        self.hover_modifier = hover_modifier
 
         # composite setup
         screen = self.get_screen()
@@ -122,7 +131,7 @@ class Window(Gtk.Window):
             x_loc, y_loc = child.relative_position
             if x_loc >= 0 and y_loc >= 0:
                 cr.save()
-                utf8 = hint_value
+                utf8 = hint_value.upper() if self.hint_upercase else hint_value
 
                 x_bearing, y_bearing, width, height, _, _ = cr.text_extents(utf8)
                 hint_width = width + self.hint_width_padding
@@ -174,35 +183,42 @@ class Window(Gtk.Window):
 
     def on_key_press(self, _, event):
         """Handle key presses :param event: Event object."""
-        keymap = Gdk.Keymap.get_default()
+        keymap = Gdk.Keymap.get_for_display(Gdk.Display.get_default())
 
-        state = Gdk.ModifierType(event.state & ~Gdk.ModifierType.LOCK_MASK)
-        res = keymap.translate_keyboard_state(
+        # if keyval is bound, keyval, effective_group, level, consumed_modifiers
+        _, keyval, _, _, consumed_modifiers = keymap.translate_keyboard_state(
             event.hardware_keycode,
-            state,
+            Gdk.ModifierType(event.state & ~Gdk.ModifierType.LOCK_MASK),
             1,
         )
 
-        keyval = res[1]
-        consumed_modifiers = res[4]
-
         modifiers = (
-            event.state & Gtk.accelerator_get_default_mod_mask() & ~consumed_modifiers
+            # current state, default mod mask, consumed modifiers
+            event.state
+            & Gtk.accelerator_get_default_mod_mask()
+            & ~consumed_modifiers
         )
 
         keyval_lower = Gdk.keyval_to_lower(keyval)
 
-        if keyval_lower != keyval:
-            modifiers |= Gdk.ModifierType.SHIFT_MASK
-            self.right_click = True
-
-        if keyval_lower == 65307:  # ESCAPE
+        if keyval_lower == self.exit_key:
             Gtk.main_quit()
+
+        if modifiers == self.hover_modifier:
+            self.mouse_action.update({"action": "hover"})
+
+        if modifiers == self.grab_modifier:
+            self.mouse_action.update({"action": "grab"})
+
+        if keyval_lower != keyval:
+            self.mouse_action.update({"action": "click", "button": "right"})
 
         hint_chr = chr(keyval_lower)
 
         if hint_chr.isdigit():
-            self.repeat = int(f"{self.repeat}{hint_chr}")
+            self.mouse_action.update(
+                {"repeat": int(f"{self.mouse_action.get("repeat", "")}{hint_chr}")}
+            )
 
         self.update_hints(hint_chr)
 
@@ -210,11 +226,15 @@ class Window(Gtk.Window):
             Gdk.keyboard_ungrab(event.time)
             self.destroy()
             x, y = self.hints[self.hint_selector_state].absolute_position
-            self.click["x"] = x
-            self.click["y"] = y
-            # self.click["button"] = "0xC1" if self.right_click else "0xC0"
-            self.click["button"] = "right" if self.right_click else "left"
-            self.click["repeat"] = self.repeat if self.repeat else 1
+            self.mouse_action.update(
+                {
+                    "action": self.mouse_action.get("action", "click"),
+                    "x": x,
+                    "y": y,
+                    "repeat": self.mouse_action.get("repeat", 1),
+                    "button": self.mouse_action.get("button", "left"),
+                }
+            )
 
     def on_grab(self, window):
         """Force keyboard grab to listen for keybaord events.
