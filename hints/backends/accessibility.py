@@ -6,66 +6,52 @@ from ..child import Child
 from .exceptions import (AccessibleChildrenNotFoundError,
                          CouldNotFindAccessibleWindow)
 
+EXPECTED_STATE_CONDITIONS = [
+    pyatspi.STATE_SENSITIVE,
+    pyatspi.STATE_ENABLED,
+    pyatspi.STATE_VISIBLE,
+    pyatspi.STATE_SHOWING,
+]
+
 
 def get_children_of_interest(
     index: int,
     root: pyatspi.Atspi.Accessible,
-    state_conditions: list[int],
     children: set,
-) -> set[Child]:
+):
     """Get Atspi Accessible children that match a given set of states
     recursively.
 
     :param index: Starting child index for root.
     :param root: Starting child.
-    :param state_condtions: The conditions to match children against.
     :param children: Set of coordinates for children to use to store
         found children coordinates.
-    :return: All matched centered children coordinates.
     """
-
-    states = pyatspi.Atspi.StateSet()
-    relative_x = -1
-    relative_y = -1
-    absolute_x = -1
-    absolute_y = -1
-    width = 0
-    length = 0
-
     try:
-        states = root.get_state_set()
-        relative_pos = root.get_position(pyatspi.WINDOW_COORDS)
-        absolute_pos = root.get_position(pyatspi.DESKTOP_COORDS)
-
-        relative_x = relative_pos.x
-        relative_y = relative_pos.y
-        absolute_x = absolute_pos.x
-        absolute_y = absolute_pos.y
-        size = root.get_size()
-        width = size.x
-        length = size.y
+        if all(
+            root.get_state_set().contains(state) for state in EXPECTED_STATE_CONDITIONS
+        ):
+            relative_pos = root.get_position(pyatspi.WINDOW_COORDS)
+            if relative_pos.x >= 0 and relative_pos.y >= 0:
+                absolute_pos = root.get_position(pyatspi.DESKTOP_COORDS)
+                size = root.get_size()
+                children.add(
+                    Child(
+                        relative_position=(
+                            relative_pos.x + size.x / 2,
+                            relative_pos.y + size.y / 2,
+                        ),
+                        absolute_position=(
+                            absolute_pos.x + size.x / 2,
+                            absolute_pos.y + size.y / 2,
+                        ),
+                    )
+                )
     except:
         pass
 
-    if (
-        relative_x >= 0
-        and relative_y >= 0
-        and all(states.contains(state) for state in state_conditions)
-    ):
-        children.add(
-            Child(
-                relative_position=(relative_x + width / 2, relative_y + length / 2),
-                absolute_position=(
-                    absolute_x + width / 2,
-                    absolute_y + length / 2,
-                ),
-            )
-        )
-
     for child in root:
-        get_children_of_interest(index + 1, child, state_conditions, children)
-
-    return children
+        get_children_of_interest(index + 1, child, children)
 
 
 def active_window() -> pyatspi.Atspi.Accessible:
@@ -95,12 +81,6 @@ def get_children() -> tuple[pyatspi.Atspi.Rect, set[Child]]:
     get_children_of_interest(
         0,
         window,
-        [
-            pyatspi.STATE_SENSITIVE,
-            pyatspi.STATE_ENABLED,
-            pyatspi.STATE_VISIBLE,
-            pyatspi.STATE_SHOWING,
-        ],
         children,
     )
 
