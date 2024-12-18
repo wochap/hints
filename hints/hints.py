@@ -120,22 +120,23 @@ def hint_mode(config: dict[str, Any], mouse: Controller):
         app.show_all()
         Gtk.main()
 
-        match mouse_action["action"]:
-            case "click":
-                mouse.position = (mouse_action["x"], mouse_action["y"])
-                mouse.click(
-                    (Button.left if mouse_action["button"] == "left" else Button.right),
-                    mouse_action["repeat"],
-                )
-            case "hover":
-                mouse.position = (mouse_action["x"], mouse_action["y"])
-            case "grab":
-                mouse.position = (mouse_action["x"], mouse_action["y"])
-                # sleep required to allow time for mouse to move before pressing
-                # less than 0.2 seconds does not always work
-                sleep(MOUSE_GRAB_PAUSE)
-                mouse.press(Button.left)
-                mouse_navigation(config, mouse)
+        if mouse_action:
+            match mouse_action["action"]:
+                case "click":
+                    mouse.position = (mouse_action["x"], mouse_action["y"])
+                    mouse.click(
+                        (Button.left if mouse_action["button"] == "left" else Button.right),
+                        mouse_action["repeat"],
+                    )
+                case "hover":
+                    mouse.position = (mouse_action["x"], mouse_action["y"])
+                case "grab":
+                    mouse.position = (mouse_action["x"], mouse_action["y"])
+                    # sleep required to allow time for mouse to move before pressing
+                    # less than 0.2 seconds does not always work
+                    sleep(MOUSE_GRAB_PAUSE)
+                    mouse.press(Button.left)
+                    mouse_navigation(config, mouse)
 
 
 def on_press(key: KeyCode, config: dict[str, Any], mouse: Controller, mode: MouseMode):
