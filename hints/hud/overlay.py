@@ -217,7 +217,7 @@ class Window(Gtk.Window):
 
         if hint_chr.isdigit():
             self.mouse_action.update(
-                {"repeat": int(f"{self.mouse_action.get("repeat", "")}{hint_chr}")}
+                {"repeat": int(f"{self.mouse_action.get('repeat', '')}{hint_chr}")}
             )
 
         self.update_hints(hint_chr)
