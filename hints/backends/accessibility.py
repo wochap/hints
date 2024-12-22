@@ -253,6 +253,14 @@ def active_window() -> pyatspi.Atspi.Accessible:
     raise CouldNotFindAccessibleWindow()
 
 
+def get_extents_from_window_manager() -> tuple[int, int, int, int]:
+    """Get extents for active window from window manager.
+
+    :return: extents (x,y,width,height).
+    """
+    return WindowManager().get_active_window().get_geometry()
+
+
 def get_children(
     config: HintsConfig,
 ) -> tuple[tuple[int, int, int, int] | None, set[Child]]:
@@ -264,15 +272,28 @@ def get_children(
     children: set[Child] = set()
     window = active_window()
     application = window.get_application()
+    toolkit = application.get_toolkit_name()
+    version = application.get_toolkit_version()
+
     logger.debug("Gathering hints for '%s'", application.name)
 
-    # Using window manager to get extents as the Atspi can't always get the
-    # position of all frameworks ie: Gnome when not using the Gnome desktop
-    # environment. The same goes for absolute window positions, those are not
-    # always correct for Gnone applications, so we are using the window extents
-    # for offests instead of relying on Atspi.
-    wm = WindowManager()
-    window_extents = wm.get_window_extents(window.get_process_id())
+    window_extents: tuple[int, int, int, int] = (0, 0, 0, 0)
+
+    # GTK4 does not support desktop level positioning
+    if toolkit == "GTK" and int(str(version).split(".", maxsplit=1)[0]) >= 4:
+        logger.debug(
+            "This application is know not to support Atspi extents functionality,"
+            "falling back to getting information from the window manager."
+        )
+        window_extents = get_extents_from_window_manager()
+    else:
+        atspi_extents = window.get_extents(pyatspi.DESKTOP_COORDS)
+        window_extents = (
+            atspi_extents.x,
+            atspi_extents.y,
+            atspi_extents.width,
+            atspi_extents.height,
+        )
 
     if window_extents:
 
