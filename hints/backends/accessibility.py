@@ -114,6 +114,7 @@ def recursively_get_children_of_interest(
             logger.debug("states: %s", root.get_state_set().get_states())
 
             relative_pos = root.get_position(pyatspi.WINDOW_COORDS)
+            size = root.get_size()
             if relative_pos.x >= 0 and relative_pos.y >= 0:
                 children.add(
                     Child(
@@ -125,6 +126,8 @@ def recursively_get_children_of_interest(
                             relative_pos.x + absolute_x_offeset,
                             relative_pos.y + absolute_y_offeset,
                         ),
+                        width=size.x,
+                        height=size.y,
                     )
                 )
     except:
@@ -205,6 +208,7 @@ def get_children_of_interest(
             logger.debug("states: %s", match.get_state_set().get_states())
 
             relative_pos = match.get_position(pyatspi.WINDOW_COORDS)
+            size = match.get_size()
             children.add(
                 Child(
                     relative_position=(
@@ -215,6 +219,8 @@ def get_children_of_interest(
                         relative_pos.x + absolute_x_offeset,
                         relative_pos.y + absolute_y_offeset,
                     ),
+                    width=size.x,
+                    height=size.y,
                 )
             )
     else:

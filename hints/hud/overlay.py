@@ -82,6 +82,7 @@ class Window(Gtk.Window):
         self.exit_key = exit_key
         self.grab_modifier = grab_modifier
         self.hover_modifier = hover_modifier
+        self.hints_drawn_offsets: dict[str, tuple[float, float]] = {}
 
         # composite setup
         screen = self.get_screen()
@@ -137,7 +138,21 @@ class Window(Gtk.Window):
                 hint_width = width + self.hint_width_padding
 
                 cr.new_path()
-                cr.translate(x_loc, y_loc)
+                # offset to bring top left corner of a hint to the correct possition
+                # so that the hint is centered on the object
+                hint_x_offset = child.width / 2 - hint_width / 2
+                hint_y_offset = child.height / 2 - hint_height / 2
+
+                hint_x = x_loc + hint_x_offset
+                hint_y = y_loc + hint_y_offset
+
+                cr.translate(hint_x, hint_y)
+                # adding offsets so that clicks sent happen in center of hints
+                # (matching the position of hints on elements)
+                self.hints_drawn_offsets[hint_value] = (
+                    hint_x_offset + hint_width / 2,
+                    hint_y_offset + hint_height / 2,
+                )
 
                 cr.rectangle(0, 0, hint_width, hint_height)
                 cr.set_source_rgba(
@@ -226,11 +241,12 @@ class Window(Gtk.Window):
             Gdk.keyboard_ungrab(event.time)
             self.destroy()
             x, y = self.hints[self.hint_selector_state].absolute_position
+            x_offset, y_offset = self.hints_drawn_offsets[self.hint_selector_state]
             self.mouse_action.update(
                 {
                     "action": self.mouse_action.get("action", "click"),
-                    "x": x,
-                    "y": y,
+                    "x": x + x_offset,
+                    "y": y + y_offset,
                     "repeat": self.mouse_action.get("repeat", 1),
                     "button": self.mouse_action.get("button", "left"),
                 }
