@@ -1,0 +1,124 @@
+"""Popup window to intercept keyboard events.
+
+This is a way to work around applications that listen for keyboard
+events, which interfere with the keyboard events to perform mouse
+movements.
+
+By creting a small window (like 1x1 pixel) over the corner of the taget
+application, we can grab keyboard focus thus preventing the target
+application from grabbing focus and interfering with the events we are
+listening for.
+"""
+
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, Any
+
+from gi import require_foreign, require_version
+
+from ..mouse import MouseMode, do_mouse_action
+from ..utils import HintsConfig
+
+require_version("Gdk", "3.0")
+require_version("Gtk", "3.0")
+require_foreign("cairo")
+
+from gi.repository import Gdk, Gtk
+from pynput.mouse import Button
+
+if TYPE_CHECKING:
+    from pynput.mouse import Controller
+
+
+class InterceptorWindow(Gtk.Window):
+    """Composite widget to overlay hints over a window."""
+
+    def __init__(
+        self,
+        x_pos: int,
+        y_pos: int,
+        width: int,
+        height: int,
+        mouse: Controller,
+        mouse_action: dict[str, Any],
+        config: HintsConfig,
+    ):
+        """Hint overlay constructor.
+
+        :param x_pos: X window position.
+        :param y_pos: Y window position.
+        :param width: Window width.
+        :param height: Window height.
+        :param mouse: Mouse device.
+        :param mouse_action: Mouse action information.
+        :param config: Hints config.
+        """
+        super().__init__(Gtk.WindowType.POPUP)
+
+        self.width = width
+        self.height = height
+        self.mouse = mouse
+        self.mouse_action = mouse_action
+        self.config = config
+        self.key_press_state: dict[str, Any] = {}
+
+        # composite setup
+        screen = self.get_screen()
+        visual = screen.get_rgba_visual()
+        self.set_visual(visual)
+
+        # window setup
+        self.set_app_paintable(True)
+        self.set_decorated(False)
+        self.set_accept_focus(True)
+        self.set_sensitive(True)
+        self.set_default_size(self.width, self.height)
+        self.move(x_pos, y_pos)
+
+        self.connect("destroy", Gtk.main_quit)
+        self.connect("key-press-event", self.on_key_press)
+        self.connect("key-release-event", self.on_key_release)
+        self.connect("show", self.on_grab)
+
+    def on_key_release(self, *_):
+        """Handle key releases."""
+        self.key_press_state.clear()
+
+    def on_key_press(self, _, event):
+        """Handle key presses :param event: Event object."""
+
+        keymap = Gdk.Keymap.get_for_display(Gdk.Display.get_default())
+
+        # if keyval is bound, keyval, effective_group, level, consumed_modifiers
+        _, keyval, _, _, _ = keymap.translate_keyboard_state(
+            event.hardware_keycode,
+            Gdk.ModifierType(event.state & ~Gdk.ModifierType.LOCK_MASK),
+            1,
+        )
+
+        keyval_lower = Gdk.keyval_to_lower(keyval)
+
+        if keyval_lower == self.config["exit_key"]:
+            self.mouse.release(Button.left)
+            Gtk.main_quit()
+
+        match self.mouse_action["action"]:
+            case "grab":
+                do_mouse_action(
+                    self.key_press_state,
+                    self.config,
+                    chr(keyval_lower),
+                    self.mouse,
+                    MouseMode.MOVE,
+                )
+
+    def on_grab(self, window):
+        """Force keyboard grab to listen for keybaord events.
+
+        :param window: Window object.
+        """
+        while (
+            Gdk.keyboard_grab(window.get_window(), False, Gdk.CURRENT_TIME)
+            != Gdk.GrabStatus.SUCCESS
+        ):
+            pass
