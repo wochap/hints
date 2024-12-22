@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Any
 
-import cairo
 from gi import require_foreign, require_version
 
 from ..utils import HintsConfig
@@ -12,10 +11,12 @@ from ..utils import HintsConfig
 require_version("Gdk", "3.0")
 require_version("Gtk", "3.0")
 require_foreign("cairo")
-
+from cairo import FONT_SLANT_NORMAL, FONT_WEIGHT_BOLD
 from gi.repository import Gdk, Gtk
 
 if TYPE_CHECKING:
+    from cairo import Context
+
     from ..child import Child
 
 
@@ -61,6 +62,11 @@ class OverlayWindow(Gtk.Window):
         self.hint_font_g = hints_config["hint_font_g"]
         self.hint_font_b = hints_config["hint_font_b"]
         self.hint_font_a = hints_config["hint_font_a"]
+
+        self.hint_pressed_font_r = hints_config["hint_pressed_font_r"]
+        self.hint_pressed_font_g = hints_config["hint_pressed_font_g"]
+        self.hint_pressed_font_b = hints_config["hint_pressed_font_b"]
+        self.hint_pressed_font_a = hints_config["hint_pressed_font_a"]
         self.hint_upercase = hints_config["hint_upercase"]
 
         self.hint_background_r = hints_config["hint_background_r"]
@@ -107,16 +113,14 @@ class OverlayWindow(Gtk.Window):
         self.add(vpaned)
         vpaned.pack1(put_in_frame(self.drawing_area), True, True)
 
-    def on_draw(self, _, cr):
+    def on_draw(self, _, cr: Context):
         """Draw hints.
 
-        :param cr: Cairo object.
+        :param cr: Cairo Context.
         """
         hint_height = self.hint_height
 
-        cr.select_font_face(
-            self.hint_font_face, cairo.FONT_SLANT_NORMAL, cairo.FONT_WEIGHT_BOLD
-        )
+        cr.select_font_face(self.hint_font_face, FONT_SLANT_NORMAL, FONT_WEIGHT_BOLD)
         cr.set_font_size(self.hint_font_size)
 
         for hint_value, child in self.hints.items():
@@ -124,6 +128,11 @@ class OverlayWindow(Gtk.Window):
             if x_loc >= 0 and y_loc >= 0:
                 cr.save()
                 utf8 = hint_value.upper() if self.hint_upercase else hint_value
+                hint_state = (
+                    self.hint_selector_state.upper()
+                    if self.hint_upercase
+                    else self.hint_selector_state
+                )
 
                 x_bearing, y_bearing, width, height, _, _ = cr.text_extents(utf8)
                 hint_width = width + self.hint_width_padding
@@ -154,11 +163,13 @@ class OverlayWindow(Gtk.Window):
                 )
                 cr.fill()
 
-                cr.move_to(
+                hint_text_position = (
                     (hint_width / 2) - (width / 2 + x_bearing),
                     (hint_height / 2) - (height / 2 + y_bearing),
                 )
 
+                # draw hint
+                cr.move_to(*hint_text_position)
                 cr.set_source_rgba(
                     self.hint_font_r,
                     self.hint_font_g,
@@ -166,6 +177,16 @@ class OverlayWindow(Gtk.Window):
                     self.hint_font_a,
                 )
                 cr.show_text(utf8)
+
+                cr.move_to(*hint_text_position)
+                cr.set_source_rgba(
+                    self.hint_pressed_font_r,
+                    self.hint_pressed_font_g,
+                    self.hint_pressed_font_b,
+                    self.hint_pressed_font_a,
+                )
+                cr.show_text(hint_state)
+
                 cr.close_path()
                 cr.restore()
 
