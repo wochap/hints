@@ -59,7 +59,7 @@ setup(
     license="MIT",
     packages=[
         "hints",
-        "hints.platform_utils",
+        "hints.platform_utils.linux",
         "hints.backends",
         "hints.hud",
     ],
