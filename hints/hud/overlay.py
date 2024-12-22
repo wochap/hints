@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any
 import cairo
 from gi import require_foreign, require_version
 
-from ..constants import DEFAULT_CONFIG
+from ..utils import HintsConfig
 
 require_version("Gdk", "3.0")
 require_version("Gtk", "3.0")
@@ -19,7 +19,7 @@ if TYPE_CHECKING:
     from ..child import Child
 
 
-class Window(Gtk.Window):
+class OverlayWindow(Gtk.Window):
     """Composite widget to overlay hints over a window."""
 
     def __init__(
@@ -28,31 +28,19 @@ class Window(Gtk.Window):
         y_pos: int,
         width: int,
         height: int,
+        config: HintsConfig,
         hints: dict[str, Child],
         mouse_action: dict[str, Any],
-        hint_height=40,
-        hint_width_padding=10,
-        hint_font_size=20,
-        hint_font_face="Sans",
-        hint_font_r=0,
-        hint_font_g=0,
-        hint_font_b=0,
-        hint_font_a=1,
-        hint_upercase=True,
-        hint_background_r=1,
-        hint_background_g=81,
-        hint_background_b=0.30,
-        hint_background_a=0.6,
-        exit_key=DEFAULT_CONFIG["exit_key"],
-        hover_modifier=DEFAULT_CONFIG["hover_modifier"],
-        grab_modifier=DEFAULT_CONFIG["grab_modifier"],
     ):
         """Hint overlay constructor.
 
+        :param x_pos: X window position.
+        :param y_pos: Y window position.
         :param width: Window width.
         :param height: Window height.
+        :param config: Hints config.
         :param hints: Hints to draw.
-        :param mouse_action: Mouse action to send.
+        :param mouse_action: Mouse action information.
         """
         super().__init__(Gtk.WindowType.POPUP)
 
@@ -63,25 +51,28 @@ class Window(Gtk.Window):
         self.mouse_action = mouse_action
 
         # hint settings
-        self.hint_height = hint_height
-        self.hint_width_padding = hint_width_padding
+        hints_config = config["hints"]
+        self.hint_height = hints_config["hint_height"]
+        self.hint_width_padding = hints_config["hint_width_padding"]
 
-        self.hint_font_size = hint_font_size
-        self.hint_font_face = hint_font_face
-        self.hint_font_r = hint_font_r
-        self.hint_font_g = hint_font_g
-        self.hint_font_b = hint_font_b
-        self.hint_font_a = hint_font_a
-        self.hint_upercase = hint_upercase
+        self.hint_font_size = hints_config["hint_font_size"]
+        self.hint_font_face = hints_config["hint_font_face"]
+        self.hint_font_r = hints_config["hint_font_r"]
+        self.hint_font_g = hints_config["hint_font_g"]
+        self.hint_font_b = hints_config["hint_font_b"]
+        self.hint_font_a = hints_config["hint_font_a"]
+        self.hint_upercase = hints_config["hint_upercase"]
 
-        self.hint_background_r = hint_background_r
-        self.hint_background_g = hint_background_g
-        self.hint_background_b = hint_background_b
-        self.hint_background_a = hint_background_a
+        self.hint_background_r = hints_config["hint_background_r"]
+        self.hint_background_g = hints_config["hint_background_g"]
+        self.hint_background_b = hints_config["hint_background_b"]
+        self.hint_background_a = hints_config["hint_background_a"]
 
-        self.exit_key = exit_key
-        self.grab_modifier = grab_modifier
-        self.hover_modifier = hover_modifier
+        # key settings
+        self.exit_key = config["exit_key"]
+        self.hover_modifier = config["hover_modifier"]
+        self.grab_modifier = config["grab_modifier"]
+
         self.hints_drawn_offsets: dict[str, tuple[float, float]] = {}
 
         # composite setup
@@ -262,19 +253,3 @@ class Window(Gtk.Window):
             != Gdk.GrabStatus.SUCCESS
         ):
             pass
-
-
-# Useful for testing hints on the fly by calling module
-if __name__ == "__main__":
-    res_x = 2560
-    res_y = 1440
-    app = HintWindow(
-        0,
-        0,
-        res_x,
-        res_y,
-        hints={(10, 10), (300, 10)},
-    )
-    app.connect("destroy", Gtk.main_quit)
-    app.show_all()
-    Gtk.main()
