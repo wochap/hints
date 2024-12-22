@@ -28,7 +28,7 @@ DEFAULT_CONFIG = {
         "hint_background_r": 1,
         "hint_background_g": 1,
         "hint_background_b": 0.5,
-        "hint_background_a": 0.6,
+        "hint_background_a": 0.8,
     },
     "backends": {
         "atspi": {
