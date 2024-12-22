@@ -2,24 +2,22 @@ from __future__ import annotations
 
 import logging
 from argparse import ArgumentParser
-from enum import Enum
 from itertools import product
 from math import ceil, log
-from time import sleep, time
+from time import sleep
 from typing import TYPE_CHECKING, Any
 
 from gi import require_version
-from pynput import keyboard
 from pynput.mouse import Button, Controller
 
 from .backends.accessibility import get_children
 from .constants import MOUSE_GRAB_PAUSE
-from .hud.overlay import Window
+from .hud.interceptor import InterceptorWindow
+from .hud.overlay import OverlayWindow
+from .mouse import MouseMode, mouse_navigation
 from .utils import HintsConfig, load_config
 
 if TYPE_CHECKING:
-    from pynput.keyboard import KeyCode
-
     from .child import Child
 
 try:
@@ -32,13 +30,6 @@ except ValueError:
 
 require_version("Gtk", "3.0")
 from gi.repository import Gtk
-
-KEY_PRESS_STATE: dict[str, Any] = {"sensitivity": 10}
-
-
-class MouseMode(Enum):
-    MOVE = 1
-    SCROLL = 2
 
 
 def get_hints(children: set, alphabet: str | set[str]) -> dict[str, Child]:
@@ -80,17 +71,14 @@ def hint_mode(config: HintsConfig, mouse: Controller):
     if window_extents and hints:
         mouse_action: dict[str, Any] = {}
         x, y, width, height = window_extents
-        app = Window(
+        app = OverlayWindow(
             x,
             y,
             width,
             height,
+            config=config,
             hints=hints,
             mouse_action=mouse_action,
-            **config["hints"],
-            exit_key=config["exit_key"],
-            hover_modifier=["hover_modifier"],
-            grab_modifier=config["grab_modifier"],
         )
 
         if IS_WAYLAND:
@@ -123,99 +111,11 @@ def hint_mode(config: HintsConfig, mouse: Controller):
                     # less than 0.2 seconds does not always work
                     sleep(MOUSE_GRAB_PAUSE)
                     mouse.press(Button.left)
-                    mouse_navigation(config, mouse)
-
-
-def on_press(key: KeyCode, config: HintsConfig, mouse: Controller, mode: MouseMode):
-    """Mouse press event handler.
-
-    :param key: Key event.
-    :param config: Hints config.
-    :param mouse: Mouse device.
-    :param mode: Mouse mode (move/scroll).
-    """
-    try:
-        KEY_PRESS_STATE.setdefault("start_time", time())
-
-        sensitivity = 1
-        rampup_time = 1
-        mouse_navigation_action = mouse.move
-        left = "h"
-        right = "l"
-        up = "k"
-        down = "j"
-
-        if mode == MouseMode.MOVE:
-            sensitivity = config["mouse_move_pixel_sensitivity"]
-            rampup_time = config["mouse_move_rampup_time"]
-            left = config["mouse_move_left"]
-            right = config["mouse_move_right"]
-
-            # up and down are intentionally switched to keep the logic the same
-            # as scrol
-            up = config["mouse_move_down"]
-            down = config["mouse_move_up"]
-
-            mouse_navigation_action = mouse.move
-
-        elif mode == MouseMode.SCROLL:
-            sensitivity = config["mouse_scroll_pixel_sensitivity"]
-            rampup_time = config["mouse_scroll_rampup_time"]
-            left = config["mouse_scroll_left"]
-            right = config["MOUSE_SCROLL_RIGHT"]
-            up = config["mouse_scroll_up"]
-            down = config["mouse_scroll_down"]
-            mouse_navigation_action = mouse.scroll
-
-        KEY_PRESS_STATE.setdefault("sensitivity", sensitivity)
-
-        if time() - KEY_PRESS_STATE["start_time"] >= rampup_time:
-            KEY_PRESS_STATE["sensitivity"] += sensitivity
-
-        if key.char == left:
-            mouse_navigation_action(-KEY_PRESS_STATE["sensitivity"], 0)
-        if key.char == right:
-            mouse_navigation_action(KEY_PRESS_STATE["sensitivity"], 0)
-        if key.char == up:
-            mouse_navigation_action(0, KEY_PRESS_STATE["sensitivity"])
-        if key.char == down:
-            mouse_navigation_action(0, -KEY_PRESS_STATE["sensitivity"])
-
-    except AttributeError:
-        pass
-
-
-def on_release(key: KeyCode, mouse: Controller) -> bool | None:
-    """Mouse release event handler.
-
-    :param key: Key event.
-    :param mouse: Mouse device.
-    :return: keyhandler state
-    """
-
-    KEY_PRESS_STATE.clear()
-
-    if key == keyboard.Key.esc:
-        mouse.release(Button.left)
-        return False
-
-    return None
-
-
-def mouse_navigation(
-    config: HintsConfig, mouse: Controller, mode: MouseMode = MouseMode.MOVE
-):
-    """Mouse navigation for mouse movement and scrolling.
-
-    :param config: Config for hints.
-    :param mouse: Mouse device.
-    :param mode: Mode used for naviation (move / scroll).
-    """
-    with keyboard.Listener(
-        on_press=lambda key: on_press(key, config, mouse, mode),
-        on_release=lambda key: on_release(key, mouse),
-    ) as listener:
-        listener.join()
+                    interceptor = InterceptorWindow(
+                        x, y, 1, 1, mouse, mouse_action, config
+                    )
+                    interceptor.show_all()
+                    Gtk.main()
 
 
 def main():
