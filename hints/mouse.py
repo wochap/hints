@@ -14,7 +14,7 @@ from .utils import HintsConfig
 if TYPE_CHECKING:
     from pynput.keyboard import KeyCode
 
-KEY_PRESS_STATE: dict[str, Any] = {"sensitivity": 10}
+KEY_PRESS_STATE: dict[str, Any] = {}
 
 
 class MouseMode(Enum):
