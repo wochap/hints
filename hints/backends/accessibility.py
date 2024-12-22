@@ -1,49 +1,129 @@
 """Accessibility backend to get elements from an application using Atspi."""
 
+import logging
+from time import time
+from typing import Literal
+
 import pyatspi
 
 from ..child import Child
+from ..platform_utils.linux.window_manager import WindowManager
+from ..utils import HintsConfig
 from .exceptions import (AccessibleChildrenNotFoundError,
                          CouldNotFindAccessibleWindow)
 
-EXPECTED_STATE_CONDITIONS = [
-    pyatspi.STATE_SENSITIVE,
-    pyatspi.STATE_ENABLED,
-    pyatspi.STATE_VISIBLE,
-    pyatspi.STATE_SHOWING,
-]
+logger = logging.getLogger(__name__)
 
 
-def get_children_of_interest(
-    index: int,
+def validate_match_conditions(
+    root: pyatspi.Atspi.Accessible,
+    match_against: set[pyatspi.Atspi.StateType | pyatspi.Atspi.Role],
+    condition: pyatspi.Atspi.CollectionMatchType,
+    match_type: Literal["state", "role"],
+) -> bool:
+    """Validate matching conditions for atspi match types.
+
+    :param root: Accessible element to validate.
+    :param match_against: Set to match against.
+    :param conditions: Condition to match for.
+    :param match_type: The type of matching to do.
+    """
+    result = False
+    match match_type:
+        case "state":
+            state_set = root.get_state_set()
+            match condition:
+                case pyatspi.Collection.MATCH_ALL:
+                    result = all(
+                        state_set.contains(state_to_match)
+                        for state_to_match in match_against
+                    )
+                case pyatspi.Collection.MATCH_ANY:
+                    result = any(
+                        state_set.contains(state_to_match)
+                        for state_to_match in match_against
+                    )
+                case pyatspi.Collection.MATCH_NONE:
+                    result = not any(
+                        state_set.contains(state_to_match)
+                        for state_to_match in match_against
+                    )
+
+        case "role":
+            role = root.get_role()
+            match condition:
+                case pyatspi.Collection.MATCH_ALL:
+                    # for all elements to match means the only role must be
+                    # in the set (like any)
+                    # the other way to think about this is that roles is just
+                    # one to check ie: role = {a_single_role}, but that does not
+                    # seem very useful.
+                    result = role in match_against
+                case pyatspi.Collection.MATCH_ANY:
+                    result = role in match_against
+                case pyatspi.Collection.MATCH_NONE:
+                    result = not role in match_against
+    return result
+
+
+def recursively_get_children_of_interest(
     root: pyatspi.Atspi.Accessible,
     children: set,
+    states: set[pyatspi.Atspi.StateType],
+    states_match_type: pyatspi.Atspi.CollectionMatchType,
+    attributes: dict[str, str],
+    attributes_match_type: pyatspi.Atspi.CollectionMatchType,
+    roles: set[pyatspi.Atspi.Role],
+    roles_match_type: pyatspi.Atspi.CollectionMatchType,
+    absolute_x_offeset: int,
+    absolute_y_offeset: int,
 ):
-    """Get Atspi Accessible children that match a given set of states
-    recursively.
+    """This is a fallback gathering method for when Applications do not
+    implement the Collections interface.
 
-    :param index: Starting child index for root.
+    It is slower than using the Collection's interface, which is why it
+    is a fallback method and not the primary way to gather accessible
+    elements.
+
     :param root: Starting child.
     :param children: Set of coordinates for children to use to store
         found children coordinates.
+    :param states: States to match against.
+    :param states_match_type: Match type enum.
+    :param attributes: Attributes to match against.
+    :param attributes_match_type: Match type enum.
+    :param roles: Roles to match against.
+    :param roles_match_type: Match type enum.
+    :param abosolute_x_offset: Absolute offset x based on Window
+        position.
+    :param abosolute_y_offset: Absolute offset y based on Window
+        position.
     """
     try:
-        if all(
-            root.get_state_set().contains(state) for state in EXPECTED_STATE_CONDITIONS
-        ):
+        if validate_match_conditions(
+            root, states, states_match_type, "state"
+        ) and validate_match_conditions(root, roles, roles_match_type, "role"):
+
+            logger.debug(
+                "Accessible element matched name: %s, id: %d, text: %s",
+                root.name,
+                root.id,
+                root.get_text(),
+            )
+            logger.debug("role: %s", root.get_role())
+            logger.debug("states: %s", root.get_state_set().get_states())
+
             relative_pos = root.get_position(pyatspi.WINDOW_COORDS)
             if relative_pos.x >= 0 and relative_pos.y >= 0:
-                absolute_pos = root.get_position(pyatspi.DESKTOP_COORDS)
-                size = root.get_size()
                 children.add(
                     Child(
                         relative_position=(
-                            relative_pos.x + size.x / 2,
-                            relative_pos.y + size.y / 2,
+                            relative_pos.x,
+                            relative_pos.y,
                         ),
                         absolute_position=(
-                            absolute_pos.x + size.x / 2,
-                            absolute_pos.y + size.y / 2,
+                            relative_pos.x + absolute_x_offeset,
+                            relative_pos.y + absolute_y_offeset,
                         ),
                     )
                 )
@@ -51,7 +131,111 @@ def get_children_of_interest(
         pass
 
     for child in root:
-        get_children_of_interest(index + 1, child, children)
+        recursively_get_children_of_interest(
+            child,
+            children,
+            states,
+            states_match_type,
+            attributes,
+            attributes_match_type,
+            roles,
+            roles_match_type,
+            absolute_x_offeset,
+            absolute_y_offeset,
+        )
+
+
+def get_children_of_interest(
+    root: pyatspi.Atspi.Accessible,
+    children: set,
+    states: list[pyatspi.Atspi.StateType],
+    states_match_type: pyatspi.Atspi.CollectionMatchType,
+    attributes: dict[str, str],
+    attributes_match_type: pyatspi.Atspi.CollectionMatchType,
+    roles: list[pyatspi.Atspi.Role],
+    roles_match_type: pyatspi.Atspi.CollectionMatchType,
+    absolute_x_offeset: int,
+    absolute_y_offeset: int,
+):
+    """Get Atspi Accessible children that match a given set of states
+    recursively.
+
+    :param root: Starting child.
+    :param children: Set of coordinates for children to use to store
+        found children coordinates.
+    :param states: States to match against.
+    :param states_match_type: Match type enum.
+    :param attributes: Attributes to match against.
+    :param attributes_match_type: Match type enum.
+    :param roles: Roles to match against.
+    :param roles_match_type: Match type enum.
+    :param abosolute_x_offset: Absolute offset x based on Window
+        position.
+    :param abosolute_y_offset: Absolute offset y based on Window
+        position.
+    """
+
+    match_rule = pyatspi.Atspi.MatchRule.new(
+        pyatspi.StateSet(*states),
+        states_match_type,
+        attributes,
+        attributes_match_type,
+        roles,
+        roles_match_type,
+        [],
+        pyatspi.Collection.MATCH_ALL,
+        False,
+    )
+
+    collection = root.get_collection_iface()
+
+    if collection:
+        matches = collection.get_matches(
+            match_rule, pyatspi.Collection.SORT_ORDER_CANONICAL, 0, True
+        )
+
+        for match in matches:
+            logger.debug(
+                "Accessible element matched name: %s, id: %d, text: %s",
+                match.name,
+                match.id,
+                match.get_text(),
+            )
+            logger.debug("role: %s", match.get_role())
+            logger.debug("states: %s", match.get_state_set().get_states())
+
+            relative_pos = match.get_position(pyatspi.WINDOW_COORDS)
+            children.add(
+                Child(
+                    relative_position=(
+                        relative_pos.x,
+                        relative_pos.y,
+                    ),
+                    absolute_position=(
+                        relative_pos.x + absolute_x_offeset,
+                        relative_pos.y + absolute_y_offeset,
+                    ),
+                )
+            )
+    else:
+        logger.debug(
+            "This application does not implement the collection interface,"
+            " falling back to searching for Accessible elements recursively."
+            " This could take a while depending on the number of elements in"
+            " the application."
+        )
+        recursively_get_children_of_interest(
+            root,
+            children,
+            set(states),
+            states_match_type,
+            attributes,
+            attributes_match_type,
+            set(roles),
+            roles_match_type,
+            absolute_x_offeset,
+            absolute_y_offeset,
+        )
 
 
 def active_window() -> pyatspi.Atspi.Accessible:
@@ -69,7 +253,9 @@ def active_window() -> pyatspi.Atspi.Accessible:
     raise CouldNotFindAccessibleWindow()
 
 
-def get_children() -> tuple[pyatspi.Atspi.Rect, set[Child]]:
+def get_children(
+    config: HintsConfig,
+) -> tuple[tuple[int, int, int, int] | None, set[Child]]:
     """Get coordinates of children.
 
     :return: The extents of the window containing the children and
@@ -77,14 +263,43 @@ def get_children() -> tuple[pyatspi.Atspi.Rect, set[Child]]:
     """
     children: set[Child] = set()
     window = active_window()
+    application = window.get_application()
+    logger.debug("Gathering hints for '%s'", application.name)
 
-    get_children_of_interest(
-        0,
-        window,
-        children,
-    )
+    # Using window manager to get extents as the Atspi can't always get the
+    # position of all frameworks ie: Gnome when not using the Gnome desktop
+    # environment. The same goes for absolute window positions, those are not
+    # always correct for Gnone applications, so we are using the window extents
+    # for offests instead of relying on Atspi.
+    wm = WindowManager()
+    window_extents = wm.get_window_extents(window.get_process_id())
 
-    if not children:
-        raise AccessibleChildrenNotFoundError(active_window)
+    if window_extents:
 
-    return window.get_extents(pyatspi.DESKTOP_COORDS), children
+        all_match_rules = config["backends"]["atspi"]["match_rules"]
+        match_rules = all_match_rules["default"] | all_match_rules.get(
+            application.name, {}
+        )
+
+        start = time()
+
+        get_children_of_interest(
+            window,
+            children,
+            match_rules["states"],
+            match_rules["states_match_type"],
+            match_rules["attributes"],
+            match_rules["attributes_match_type"],
+            match_rules["roles"],
+            match_rules["roles_match_type"],
+            window_extents[0],
+            window_extents[1],
+        )
+
+        logger.debug("Gathering hints took %f seconds", time() - start)
+        logger.debug("Gathered %d hints", len(children))
+
+        if not children:
+            raise AccessibleChildrenNotFoundError(active_window)
+
+    return window_extents, children

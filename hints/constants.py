@@ -2,6 +2,7 @@
 
 from os import path
 
+import pyatspi
 from gi import require_version
 
 require_version("Gdk", "3.0")
@@ -24,6 +25,46 @@ DEFAULT_CONFIG = {
         "hint_background_g": 1,
         "hint_background_b": 0.5,
         "hint_background_a": 0.6,
+    },
+    "backends": {
+        "atspi": {
+            "match_rules": {
+                "default": {
+                    "states": [
+                        pyatspi.STATE_SENSITIVE,
+                        pyatspi.STATE_SHOWING,
+                        pyatspi.STATE_VISIBLE,
+                    ],
+                    "states_match_type": pyatspi.Collection.MATCH_ALL,
+                    "attributes": {},
+                    "attributes_match_type": pyatspi.Collection.MATCH_ALL,
+                    "roles": [
+                        # containers
+                        pyatspi.ROLE_PANEL,
+                        pyatspi.ROLE_SECTION,
+                        pyatspi.ROLE_HTML_CONTAINER,
+                        pyatspi.ROLE_FRAME,
+                        pyatspi.ROLE_MENU_BAR,
+                        pyatspi.ROLE_TOOL_BAR,
+                        pyatspi.ROLE_LIST,
+                        pyatspi.ROLE_PAGE_TAB_LIST,
+                        pyatspi.ROLE_DESCRIPTION_LIST,
+                        pyatspi.ROLE_SCROLL_PANE,
+                        pyatspi.ROLE_TABLE,
+                        # text
+                        pyatspi.ROLE_STATIC,
+                        pyatspi.ROLE_HEADING,
+                        pyatspi.ROLE_PARAGRAPH,
+                        pyatspi.ROLE_DESCRIPTION_VALUE,
+                        # other
+                        pyatspi.ROLE_LANDMARK,
+                        pyatspi.ROLE_FILLER,
+                        pyatspi.ROLE_DESCRIPTION_TERM,
+                    ],
+                    "roles_match_type": pyatspi.Collection.MATCH_NONE,
+                },
+            },
+        }
     },
     "alphabet": "asdfgqwertzxcvbhjklyuiopnm",
     "mouse_move_left": "h",

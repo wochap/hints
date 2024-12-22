@@ -1,9 +1,9 @@
 from __future__ import annotations
 
+import logging
 from argparse import ArgumentParser
 from enum import Enum
 from itertools import product
-from json import load
 from math import ceil, log
 from time import sleep, time
 from typing import TYPE_CHECKING, Any
@@ -13,8 +13,9 @@ from pynput import keyboard
 from pynput.mouse import Button, Controller
 
 from .backends.accessibility import get_children
-from .constants import CONFIG_PATH, DEFAULT_CONFIG, MOUSE_GRAB_PAUSE
+from .constants import MOUSE_GRAB_PAUSE
 from .hud.overlay import Window
+from .utils import HintsConfig, load_config
 
 if TYPE_CHECKING:
     from pynput.keyboard import KeyCode
@@ -40,9 +41,7 @@ class MouseMode(Enum):
     SCROLL = 2
 
 
-def get_hints(
-    children: set, alphabet: str | set[str] = DEFAULT_CONFIG["alphabet"]
-) -> dict[str, Child]:
+def get_hints(children: set, alphabet: str | set[str]) -> dict[str, Child]:
     """Get hints.
 
     :param children: The children elements of windown that indicate the
@@ -64,50 +63,34 @@ def get_hints(
     return hints
 
 
-def load_config() -> dict[str, Any]:
-    """Load Json config file.
-    :return: config object."""
-    config = {}
-
-    try:
-        with open(CONFIG_PATH, encoding="utf-8") as _f:
-            config = load(_f)
-    except FileNotFoundError:
-        pass
-
-    return config
-
-
-def hint_mode(config: dict[str, Any], mouse: Controller):
+def hint_mode(config: HintsConfig, mouse: Controller):
     """Hint mode to interact with hints on screen.
+
     :param config: Hints config.
     :param mouse: Mouse device.
     """
-    window_extents, chidren = get_children()
+    window_extents, chidren = get_children(config)
     hints = get_hints(
         chidren,
         alphabet={
-            character
-            for character in config.get("alphabet", DEFAULT_CONFIG["alphabet"])
-            if not character.isdigit()
+            character for character in config["alphabet"] if not character.isdigit()
         },
     )
 
     if window_extents and hints:
         mouse_action: dict[str, Any] = {}
+        x, y, width, height = window_extents
         app = Window(
-            window_extents.x,
-            window_extents.y,
-            window_extents.width,
-            window_extents.height,
+            x,
+            y,
+            width,
+            height,
             hints=hints,
             mouse_action=mouse_action,
-            **config.get("hints", DEFAULT_CONFIG["hints"]),
-            exit_key=config.get("exit_key", DEFAULT_CONFIG["exit_key"]),
-            hover_modifier=config.get(
-                "hover_modifier", DEFAULT_CONFIG["hover_modifier"]
-            ),
-            grab_modifier=config.get("grab_modifier", DEFAULT_CONFIG["grab_modifier"]),
+            **config["hints"],
+            exit_key=config["exit_key"],
+            hover_modifier=["hover_modifier"],
+            grab_modifier=config["grab_modifier"],
         )
 
         if IS_WAYLAND:
@@ -125,7 +108,11 @@ def hint_mode(config: dict[str, Any], mouse: Controller):
                 case "click":
                     mouse.position = (mouse_action["x"], mouse_action["y"])
                     mouse.click(
-                        (Button.left if mouse_action["button"] == "left" else Button.right),
+                        (
+                            Button.left
+                            if mouse_action["button"] == "left"
+                            else Button.right
+                        ),
                         mouse_action["repeat"],
                     )
                 case "hover":
@@ -139,8 +126,9 @@ def hint_mode(config: dict[str, Any], mouse: Controller):
                     mouse_navigation(config, mouse)
 
 
-def on_press(key: KeyCode, config: dict[str, Any], mouse: Controller, mode: MouseMode):
+def on_press(key: KeyCode, config: HintsConfig, mouse: Controller, mode: MouseMode):
     """Mouse press event handler.
+
     :param key: Key event.
     :param config: Hints config.
     :param mouse: Mouse device.
@@ -158,37 +146,25 @@ def on_press(key: KeyCode, config: dict[str, Any], mouse: Controller, mode: Mous
         down = "j"
 
         if mode == MouseMode.MOVE:
-            sensitivity = config.get(
-                "mouse_move_pixel_sensitivity",
-                DEFAULT_CONFIG["mouse_move_pixel_sensitivity"],
-            )
-            rampup_time = config.get(
-                "mouse_move_rampup_time", DEFAULT_CONFIG["mouse_move_rampup_time"]
-            )
-            left = config.get("mouse_move_left", DEFAULT_CONFIG["mouse_move_left"])
-            right = config.get("mouse_move_right", DEFAULT_CONFIG["mouse_move_right"])
+            sensitivity = config["mouse_move_pixel_sensitivity"]
+            rampup_time = config["mouse_move_rampup_time"]
+            left = config["mouse_move_left"]
+            right = config["mouse_move_right"]
 
             # up and down are intentionally switched to keep the logic the same
             # as scrol
-            up = config.get("mouse_move_down", DEFAULT_CONFIG["mouse_move_down"])
-            down = config.get("mouse_move_up", DEFAULT_CONFIG["mouse_move_up"])
+            up = config["mouse_move_down"]
+            down = config["mouse_move_up"]
 
             mouse_navigation_action = mouse.move
 
         elif mode == MouseMode.SCROLL:
-            sensitivity = config.get(
-                "mouse_scroll_pixel_sensitivity",
-                DEFAULT_CONFIG["mouse_scroll_pixel_sensitivity"],
-            )
-            rampup_time = config.get(
-                "mouse_scroll_rampup_time", DEFAULT_CONFIG["mouse_scroll_rampup_time"]
-            )
-            left = config.get("mouse_scroll_left", DEFAULT_CONFIG["mouse_scroll_left"])
-            right = config.get(
-                "mouse_scroll_right", DEFAULT_CONFIG["mouse_scroll_right"]
-            )
-            up = config.get("mouse_scroll_up", DEFAULT_CONFIG["mouse_scroll_up"])
-            down = config.get("mouse_scroll_down", DEFAULT_CONFIG["mouse_scroll_down"])
+            sensitivity = config["mouse_scroll_pixel_sensitivity"]
+            rampup_time = config["mouse_scroll_rampup_time"]
+            left = config["mouse_scroll_left"]
+            right = config["MOUSE_SCROLL_RIGHT"]
+            up = config["mouse_scroll_up"]
+            down = config["mouse_scroll_down"]
             mouse_navigation_action = mouse.scroll
 
         KEY_PRESS_STATE.setdefault("sensitivity", sensitivity)
@@ -211,6 +187,7 @@ def on_press(key: KeyCode, config: dict[str, Any], mouse: Controller, mode: Mous
 
 def on_release(key: KeyCode, mouse: Controller) -> bool | None:
     """Mouse release event handler.
+
     :param key: Key event.
     :param mouse: Mouse device.
     :return: keyhandler state
@@ -226,9 +203,10 @@ def on_release(key: KeyCode, mouse: Controller) -> bool | None:
 
 
 def mouse_navigation(
-    config: dict[str, Any], mouse: Controller, mode: MouseMode = MouseMode.MOVE
+    config: HintsConfig, mouse: Controller, mode: MouseMode = MouseMode.MOVE
 ):
     """Mouse navigation for mouse movement and scrolling.
+
     :param config: Config for hints.
     :param mouse: Mouse device.
     :param mode: Mode used for naviation (move / scroll).
@@ -259,10 +237,28 @@ def main():
         choices=["hint", "scroll"],
         help="mode to use",
     )
+    parser.add_argument(
+        "-v",
+        "--verbose",
+        action="count",
+        default=0,
+        help="Set verbosity of output. Useful for debugging and seeing the"
+        " output of accessible elements (roles, states, application name, ect)"
+        " for setting up configuration.",
+    )
+
+    args = parser.parse_args()
+
+    custom_format = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+
+    if args.verbose >= 1:
+        logging.basicConfig(level=logging.DEBUG, format=custom_format)
+    else:
+        logging.basicConfig(level=logging.INFO, format=custom_format)
 
     mouse = Controller()
 
-    match parser.parse_args().mode:
+    match args.mode:
         case "hint":
             hint_mode(config, mouse)
         case "scroll":
