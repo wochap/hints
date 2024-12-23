@@ -111,6 +111,14 @@ class InterceptorWindow(Gtk.Window):
                     self.mouse,
                     MouseMode.MOVE,
                 )
+            case "scroll":
+                do_mouse_action(
+                    self.key_press_state,
+                    self.config,
+                    chr(keyval_lower),
+                    self.mouse,
+                    MouseMode.SCROLL,
+                )
 
     def on_grab(self, window):
         """Force keyboard grab to listen for keybaord events.

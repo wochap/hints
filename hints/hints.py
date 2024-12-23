@@ -162,4 +162,8 @@ def main():
         case "hint":
             hint_mode(config, mouse)
         case "scroll":
-            mouse_navigation(config, mouse, MouseMode.SCROLL)
+            interceptor = InterceptorWindow(
+                0, 0, 1, 1, mouse, {"action": "scroll"}, config
+            )
+            interceptor.show_all()
+            Gtk.main()
