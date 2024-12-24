@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any
 from pynput import keyboard
 from pynput.mouse import Button, Controller
 
-from .utils import HintsConfig
+from hints.utils import HintsConfig
 
 if TYPE_CHECKING:
     from pynput.keyboard import KeyCode

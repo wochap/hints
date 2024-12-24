@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 from gi import require_foreign, require_version
 
-from ..utils import HintsConfig
+from hints.utils import HintsConfig
 
 require_version("Gdk", "3.0")
 require_version("Gtk", "3.0")
@@ -17,7 +17,7 @@ from gi.repository import Gdk, Gtk
 if TYPE_CHECKING:
     from cairo import Context
 
-    from ..child import Child
+    from hints.child import Child
 
 
 class OverlayWindow(Gtk.Window):
@@ -25,10 +25,10 @@ class OverlayWindow(Gtk.Window):
 
     def __init__(
         self,
-        x_pos: int,
-        y_pos: int,
-        width: int,
-        height: int,
+        x_pos: float,
+        y_pos: float,
+        width: float,
+        height: float,
         config: HintsConfig,
         hints: dict[str, Child],
         mouse_action: dict[str, Any],

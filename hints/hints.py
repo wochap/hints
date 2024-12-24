@@ -4,18 +4,21 @@ import logging
 from argparse import ArgumentParser
 from itertools import product
 from math import ceil, log
-from time import sleep
+from time import sleep, time
 from typing import TYPE_CHECKING, Any
 
 from gi import require_version
 from pynput.mouse import Button, Controller
 
-from .backends.accessibility import get_children
-from .constants import MOUSE_GRAB_PAUSE
-from .hud.interceptor import InterceptorWindow
-from .hud.overlay import OverlayWindow
-from .mouse import MouseMode, mouse_navigation
-from .utils import HintsConfig, load_config
+from hints.backends.atspi import AtspiBackend
+from hints.backends.exceptions import AccessibleChildrenNotFoundError
+from hints.backends.opencv import OpenCV
+from hints.constants import MOUSE_GRAB_PAUSE
+from hints.huds.interceptor import InterceptorWindow
+from hints.huds.overlay import OverlayWindow
+from hints.utils import HintsConfig, load_config
+
+logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
     from .child import Child
@@ -60,62 +63,94 @@ def hint_mode(config: HintsConfig, mouse: Controller):
     :param config: Hints config.
     :param mouse: Mouse device.
     """
-    window_extents, chidren = get_children(config)
-    hints = get_hints(
-        chidren,
-        alphabet={
-            character for character in config["alphabet"] if not character.isdigit()
-        },
-    )
+    window_extents = None
+    hints = {}
 
-    if window_extents and hints:
-        mouse_action: dict[str, Any] = {}
-        x, y, width, height = window_extents
-        app = OverlayWindow(
-            x,
-            y,
-            width,
-            height,
-            config=config,
-            hints=hints,
-            mouse_action=mouse_action,
+    backends_map = {"atspi": AtspiBackend, "opencv": OpenCV}
+    backends = config["backends"]["enable"]
+
+    for backend in backends:
+
+        start = time()
+        current_backend = backends_map[backend](config)
+        logger.debug(
+            "Attempting to get accessible children using the '%s' backend.",
+            backend,
         )
+        try:
+            children = current_backend.get_children()
 
-        if IS_WAYLAND:
-            GtkLayerShell.init_for_window(app)
-            GtkLayerShell.auto_exclusive_zone_enable(app)
-            GtkLayerShell.set_anchor(app, GtkLayerShell.Edge.TOP, True)
-            GtkLayerShell.set_anchor(app, GtkLayerShell.Edge.LEFT, True)
-            GtkLayerShell.set_layer(app, GtkLayerShell.Layer.OVERLAY)
+            logger.debug("Gathering hints took %f seconds", time() - start)
+            logger.debug("Gathered %d hints", len(children))
 
-        app.show_all()
-        Gtk.main()
+            hints = get_hints(
+                children,
+                alphabet={
+                    character
+                    for character in config["alphabet"]
+                    if not character.isdigit()
+                },
+            )
 
-        if mouse_action:
-            match mouse_action["action"]:
-                case "click":
-                    mouse.position = (mouse_action["x"], mouse_action["y"])
-                    mouse.click(
-                        (
-                            Button.left
-                            if mouse_action["button"] == "left"
-                            else Button.right
-                        ),
-                        mouse_action["repeat"],
-                    )
-                case "hover":
-                    mouse.position = (mouse_action["x"], mouse_action["y"])
-                case "grab":
-                    mouse.position = (mouse_action["x"], mouse_action["y"])
-                    # sleep required to allow time for mouse to move before pressing
-                    # less than 0.2 seconds does not always work
-                    sleep(MOUSE_GRAB_PAUSE)
-                    mouse.press(Button.left)
-                    interceptor = InterceptorWindow(
-                        x, y, 1, 1, mouse, mouse_action, config
-                    )
-                    interceptor.show_all()
-                    Gtk.main()
+            window_extents = current_backend.get_window_extents()
+
+        except AccessibleChildrenNotFoundError:
+            logger.debug(
+                "No acceessible children found with the '%s' backend.",
+                backend,
+            )
+
+        if window_extents and hints:
+            mouse_action: dict[str, Any] = {}
+            x, y, width, height = window_extents
+            app = OverlayWindow(
+                x,
+                y,
+                width,
+                height,
+                config=config,
+                hints=hints,
+                mouse_action=mouse_action,
+            )
+
+            if IS_WAYLAND:
+                GtkLayerShell.init_for_window(app)
+                GtkLayerShell.auto_exclusive_zone_enable(app)
+                GtkLayerShell.set_anchor(app, GtkLayerShell.Edge.TOP, True)
+                GtkLayerShell.set_anchor(app, GtkLayerShell.Edge.LEFT, True)
+                GtkLayerShell.set_layer(app, GtkLayerShell.Layer.OVERLAY)
+
+            app.show_all()
+            Gtk.main()
+
+            if mouse_action:
+                match mouse_action["action"]:
+                    case "click":
+                        mouse.position = (mouse_action["x"], mouse_action["y"])
+                        mouse.click(
+                            (
+                                Button.left
+                                if mouse_action["button"] == "left"
+                                else Button.right
+                            ),
+                            mouse_action["repeat"],
+                        )
+                    case "hover":
+                        mouse.position = (mouse_action["x"], mouse_action["y"])
+                    case "grab":
+                        mouse.position = (mouse_action["x"], mouse_action["y"])
+                        # sleep required to allow time for mouse to move before pressing
+                        # less than 0.2 seconds does not always work
+                        sleep(MOUSE_GRAB_PAUSE)
+                        mouse.press(Button.left)
+                        interceptor = InterceptorWindow(
+                            x, y, 1, 1, mouse, mouse_action, config
+                        )
+                        interceptor.show_all()
+                        Gtk.main()
+
+            # no need to use the next backend if the current one succeeded
+            break
 
 
 def main():

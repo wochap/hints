@@ -2,11 +2,11 @@
 
 from os import path
 
-import pyatspi
 from gi import require_version
 
 require_version("Gdk", "3.0")
-from gi.repository import Gdk
+require_version("Atspi", "2.0")
+from gi.repository import Atspi, Gdk
 
 CONFIG_PATH = path.join(path.expanduser("~"), ".config/hints/config.json")
 MOUSE_GRAB_PAUSE = 0.2
@@ -31,44 +31,45 @@ DEFAULT_CONFIG = {
         "hint_background_a": 0.8,
     },
     "backends": {
+        "enable": ["atspi", "opencv"],
         "atspi": {
             "match_rules": {
                 "default": {
                     "states": [
-                        pyatspi.STATE_SENSITIVE,
-                        pyatspi.STATE_SHOWING,
-                        pyatspi.STATE_VISIBLE,
+                        Atspi.StateType.SENSITIVE,
+                        Atspi.StateType.SHOWING,
+                        Atspi.StateType.VISIBLE,
                     ],
-                    "states_match_type": pyatspi.Collection.MATCH_ALL,
+                    "states_match_type": Atspi.CollectionMatchType.ALL,
                     "attributes": {},
-                    "attributes_match_type": pyatspi.Collection.MATCH_ALL,
+                    "attributes_match_type": Atspi.CollectionMatchType.ALL,
                     "roles": [
                         # containers
-                        pyatspi.ROLE_PANEL,
-                        pyatspi.ROLE_SECTION,
-                        pyatspi.ROLE_HTML_CONTAINER,
-                        pyatspi.ROLE_FRAME,
-                        pyatspi.ROLE_MENU_BAR,
-                        pyatspi.ROLE_TOOL_BAR,
-                        pyatspi.ROLE_LIST,
-                        pyatspi.ROLE_PAGE_TAB_LIST,
-                        pyatspi.ROLE_DESCRIPTION_LIST,
-                        pyatspi.ROLE_SCROLL_PANE,
-                        pyatspi.ROLE_TABLE,
+                        Atspi.Role.PANEL,
+                        Atspi.Role.SECTION,
+                        Atspi.Role.HTML_CONTAINER,
+                        Atspi.Role.FRAME,
+                        Atspi.Role.MENU_BAR,
+                        Atspi.Role.TOOL_BAR,
+                        Atspi.Role.LIST,
+                        Atspi.Role.PAGE_TAB_LIST,
+                        Atspi.Role.DESCRIPTION_LIST,
+                        Atspi.Role.SCROLL_PANE,
+                        Atspi.Role.TABLE,
                         # text
-                        pyatspi.ROLE_STATIC,
-                        pyatspi.ROLE_HEADING,
-                        pyatspi.ROLE_PARAGRAPH,
-                        pyatspi.ROLE_DESCRIPTION_VALUE,
+                        Atspi.Role.STATIC,
+                        Atspi.Role.HEADING,
+                        Atspi.Role.PARAGRAPH,
+                        Atspi.Role.DESCRIPTION_VALUE,
                         # other
-                        pyatspi.ROLE_LANDMARK,
-                        pyatspi.ROLE_FILLER,
-                        pyatspi.ROLE_DESCRIPTION_TERM,
+                        Atspi.Role.LANDMARK,
+                        Atspi.Role.FILLER,
+                        Atspi.Role.DESCRIPTION_TERM,
                     ],
-                    "roles_match_type": pyatspi.Collection.MATCH_NONE,
+                    "roles_match_type": Atspi.CollectionMatchType.NONE,
                 },
             },
-        }
+        },
     },
     "alphabet": "asdfgqwertzxcvbhjklyuiopnm",
     "mouse_move_left": "h",

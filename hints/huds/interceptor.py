@@ -15,9 +15,9 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from gi import require_foreign, require_version
+from hints.utils import HintsConfig
 
-from ..mouse import MouseMode, do_mouse_action
-from ..utils import HintsConfig
+from hints.mouse import MouseMode, do_mouse_action
 
 require_version("Gdk", "3.0")
 require_version("Gtk", "3.0")
@@ -35,10 +35,10 @@ class InterceptorWindow(Gtk.Window):
 
     def __init__(
         self,
-        x_pos: int,
-        y_pos: int,
-        width: int,
-        height: int,
+        x_pos: float,
+        y_pos: float,
+        width: float,
+        height: float,
         mouse: Controller,
         mouse_action: dict[str, Any],
         config: HintsConfig,

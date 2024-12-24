@@ -22,22 +22,14 @@ Note: This is still work in progress and only works on Linux X11, with little wa
 
 3. You will need to enable accessibility for your system. If you use a Desktop Environment, this might already be enabled by default. Otherwise, there is a guide [here, take a look at "5 Troubleshooting"](https://wiki.archlinux.org/title/Accessibility).
 
-4. hints depends on pyatspi as the accessibility layer to "see" elements on your screen. You will need to install this as a system package before using hints.
-
-| Package manager | Shell                            |
-| --------------- | -------------------------------- |
-| Pacman          | sudo pacman -S python-atspi      |
-| Apt             | sudo apt install python3-pyatspi |
-| Dnf             | sudo dnf install python3-pyatspi |
-
-5. Install [pipx](https://pipx.pypa.io/stable/installation/)
+4. Install [pipx](https://pipx.pypa.io/stable/installation/)
 
 ## Installing hints
 
 1. Install hints:
 
 ```
-pipx install git+https://github.com/AlfredoSequeida/hints.git --system-site-packages
+pipx install git+https://github.com/AlfredoSequeida/hints.git
 ```
 
 2. At this point, hints should be installed, you can verify this by running `hints` in your shell. However, you will likely not see anything unless your shell has accessible elements. You will want to bind a keyboard shortcut to `hints` so you don't have to keep typing in a command to open it. This will depend on your OS/ window manager / desktop environment.
@@ -74,10 +66,10 @@ The easiest ways to contribute are to:
 
 If you want to help develop hints, first setup your environment:
 
-1. Because python-atspi is a system package, you will need to install that for your system first using your package manager. Then you can setup a virtual environment that includes python-atspi:
+1. Create a virtual environment for the project.
 
 ```
-python3 -m venv venv --system-site-packages
+python3 -m venv venv
 ```
 
 2. Activate your virtual environment for development. This will differ based on OS/shell. See the table [here](https://docs.python.org/3/library/venv.html#how-venvs-work) for instructions.

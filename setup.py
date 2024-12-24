@@ -29,7 +29,9 @@ setup(
     name="hints",
     version=dynamic_version,
     author="Alfredo Sequeida",
-    description='Hints lets you navigate GUI applications in Linux without your mouse by displaying "hints" you can type on your keyboard to interact with GUI elements.',
+    description="Hints lets you navigate GUI applications in Linux without your"
+    ' mouse by displaying "hints" you can type on your keyboard to interact'
+    " with GUI elements.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/AlfredoSequeida/hints",
@@ -57,13 +59,8 @@ setup(
         "Topic :: Desktop Environment",
     ],
     license="MIT",
-    packages=[
-        "hints",
-        "hints.platform_utils.linux",
-        "hints.backends",
-        "hints.hud",
-    ],
+    packages=["hints"],
     include_package_data=True,
-    install_requires=["PyGObject", "pynput"],
+    install_requires=["PyGObject", "pynput", "pillow", "opencv-python"],
     entry_points={"console_scripts": ["hints = hints.hints:main"]},
 )
