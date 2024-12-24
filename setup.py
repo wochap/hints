@@ -59,7 +59,7 @@ setup(
         "Topic :: Desktop Environment",
     ],
     license="MIT",
-    packages=["hints"],
+    packages=["hints", "hints.backends", "hints.huds"],
     include_package_data=True,
     install_requires=["PyGObject", "pynput", "pillow", "opencv-python"],
     entry_points={"console_scripts": ["hints = hints.hints:main"]},
