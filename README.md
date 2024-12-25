@@ -8,8 +8,7 @@ Note: This is still work in progress and only works on Linux X11, with little wa
 </p>
 
 # Click, scroll, and drag with your keyboard
-
-![demo](https://github.com/user-attachments/assets/da1d49d3-28ae-4366-9436-06f3df3406cb)
+![demo](https://github.com/user-attachments/assets/838d4043-5e21-4e61-979f-bd8fae7d4d36)
 
 Navigate GUIs without a mouse by typing hints in combination with modifier keys.
 
