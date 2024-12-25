@@ -18,21 +18,47 @@ Note: This is still work in progress and only works on Linux X11, with little wa
 
 1. You will need to have some sort of [compositing](https://wiki.archlinux.org/title/Xorg#Composite) setup so that you can properly overlay hints over windows with the correct level of transparency. Otherwise, the overlay will just cover the entire screen; not allowing you to see what is under the overlay.
 
-2. Additionally, you will also need to have GTK3 installed. Note that GTK4 does not work as GTK 4 removes the ability to globally position windows, which we need to create the overlay of hints.
+2. You will need to enable accessibility for your system. If you use a Desktop Environment, this might already be enabled by default. Otherwise, there is a guide [here, take a look at "5 Troubleshooting"](https://wiki.archlinux.org/title/Accessibility).
 
-3. You will need to enable accessibility for your system. If you use a Desktop Environment, this might already be enabled by default. Otherwise, there is a guide [here, take a look at "5 Troubleshooting"](https://wiki.archlinux.org/title/Accessibility).
+3. Install hints:
 
-4. Install [pipx](https://pipx.pypa.io/stable/installation/)
+Below you will find installation instructions for some popular linux distros bases. The setup is as follows:
 
-## Installing hints
+- Install the python/system dependencies (including [pipx](https://pipx.pypa.io/stable/installation/)).
+- Setup pipx.
+- Use pipx to install hints.
 
-1. Install hints:
+Ubuntu
 
 ```
-pipx install git+https://github.com/AlfredoSequeida/hints.git
+sudo apt update && \
+    sudo apt install git libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-4.0 pipx && \
+    pipx ensurepath && \
+    pipx install git+https://github.com/AlfredoSequeida/hints.git
 ```
 
-2. At this point, hints should be installed, you can verify this by running `hints` in your shell. However, you will likely not see anything unless your shell has accessible elements. You will want to bind a keyboard shortcut to `hints` so you don't have to keep typing in a command to open it. This will depend on your OS/ window manager / desktop environment.
+Fedora
+
+```
+sudo dnf install git gcc gobject-introspection-devel cairo-gobject-devel pkg-config python3-devel gtk4 pipx && \
+    pipx ensurepath && \
+    pipx install git+https://github.com/AlfredoSequeida/hints.git
+```
+
+Arch
+
+```
+sudo pacman -Sy && \
+    sudo pacman -S git python cairo pkgconf gobject-introspection gtk4 python-pipx && \
+    pipx ensurepath && \
+    pipx install git+https://github.com/AlfredoSequeida/hints.git
+```
+
+Finally, source your shell config or restart your terminal.
+
+## Setup
+
+At this point, hints should be installed, you can verify this by running `hints` in your shell. You will want to bind a keyboard shortcut to `hints` so you don't have to keep typing in a command to open it. This will depend on your OS/ window manager / desktop environment.
 
 Here is an example of a binding on i3 by editing `.conf/i3/config`:
 
