@@ -77,15 +77,15 @@ Here is an example of a binding on i3 by editing `.conf/i3/config`:
 bindsym $mod+i exec hints
 ```
 
-This will bind `mod + i` to launch hints. To stop showing hints (quit hints), press the `Esc` key on your keyboard.
+This will bind <kbd>mod</kbd> + <kbd>i</kbd> to launch hints. To stop showing hints (quit hints), press the <kbd>Esc</kbd> key on your keyboard.
 
-Hits also has a scroll mode to scroll, which can also be bound to a key combination. For example:
+Hints also has a scroll mode to scroll, which can also be bound to a key combination. For example:
 
 ```
 bindsym $mod+y exec hints --mode scroll
 ```
 
-If you still don't see any hits, the application you're testing could need a bit of extra setup. Please see the [Help,-hints-doesn't-work-with-X-application](https://github.com/AlfredoSequeida/hints/wiki/Help,-hints-doesn't-work-with-X-application) page in the wiki.
+If you still don't see any hints, the application you're testing could need a bit of extra setup. Please see the [Help,-hints-doesn't-work-with-X-application](https://github.com/AlfredoSequeida/hints/wiki/Help,-hints-doesn't-work-with-X-application) page in the wiki.
 
 # Documentation
 
