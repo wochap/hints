@@ -2,15 +2,27 @@ Note: This is still work in progress and only works on Linux X11, with little wa
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/bca7fb8e-a4ad-435b-aa40-c26dbb017239" alt="hints" />
-</p>
-
-![demo](https://github.com/user-attachments/assets/cda0e568-a16c-4bc4-af20-7b3981cc213c)
-
-<p align="center">
   <a href="https://www.keytilt.xyz" target="_blank">
-    <img src="https://github.com/user-attachments/assets/b44f8021-7f1f-4a60-9be4-561662266e96" alt="hints" />
+    <img src="https://github.com/user-attachments/assets/b44f8021-7f1f-4a60-9be4-561662266e96" alt="keytilt"/>
   </a>
 </p>
+
+# Click, scroll, and drag with your keyboard
+
+![demo](https://github.com/user-attachments/assets/da1d49d3-28ae-4366-9436-06f3df3406cb)
+
+Navigate GUIs without a mouse by typing hints in combination with modifier keys.
+
+- click once (<kbd>j</kbd><kbd>k</kbd>)
+- click multiple times (<kbd>2</kbd><kbd>j</kbd><kbd>k</kbd>)
+- right click (<kbd>SHIFT</kbd> + <kbd>j</kbd><kbd>k</kbd>)
+- drag (<kbd>ALT</kbd> + <kbd>j</kbd><kbd>k</kbd>)
+- hover (<kbd>CTRL</kbd> + <kbd>j</kbd><kbd>k</kbd>)
+- scroll using vim key bindings (<kbd>h</kbd>,<kbd>j</kbd>,<kbd>k</kbd>,<kbd>l</kbd>)
+
+Don't like the keybindings? That's ok, you can change them.
+
+
 
 # Installing
 
