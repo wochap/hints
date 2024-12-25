@@ -98,7 +98,7 @@ class OverlayWindow(Gtk.Window):
 
         self.connect("destroy", Gtk.main_quit)
         self.connect("key-press-event", self.on_key_press)
-        self.connect("show", self.on_grab)
+        self.connect("show", self.on_show)
         self.drawing_area.connect("draw", self.on_draw)
 
         def put_in_frame(widget):
@@ -264,13 +264,22 @@ class OverlayWindow(Gtk.Window):
                 }
             )
 
-    def on_grab(self, window):
-        """Force keyboard grab to listen for keybaord events.
+    def on_show(self, window):
+        """Setup window on show.
 
-        :param window: Window object.
+        Force keyboard grab to listen for keybaord events. Hide mouse so
+        it does not block hints.
+
+        :param window: Gtk Window object.
         """
+
         while (
             Gdk.keyboard_grab(window.get_window(), False, Gdk.CURRENT_TIME)
             != Gdk.GrabStatus.SUCCESS
         ):
             pass
+
+        Gdk.Window.set_cursor(
+            self.get_window(),  # Gdk Window object
+            Gdk.Cursor.new_from_name(Gdk.Display.get_default(), "none"),
+        )
