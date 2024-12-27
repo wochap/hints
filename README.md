@@ -17,7 +17,7 @@ Navigate GUIs without a mouse by typing hints in combination with modifier keys.
 - right click (<kbd>SHIFT</kbd> + <kbd>j</kbd><kbd>k</kbd>)
 - drag (<kbd>ALT</kbd> + <kbd>j</kbd><kbd>k</kbd>)
 - hover (<kbd>CTRL</kbd> + <kbd>j</kbd><kbd>k</kbd>)
-- scroll using vim key bindings (<kbd>h</kbd>,<kbd>j</kbd>,<kbd>k</kbd>,<kbd>l</kbd>)
+- scroll/move the mouse using vim key bindings (<kbd>h</kbd>,<kbd>j</kbd>,<kbd>k</kbd>,<kbd>l</kbd>)
 
 Don't like the keybindings? That's ok, you can change them.
 
