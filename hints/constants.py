@@ -33,7 +33,7 @@ DEFAULT_CONFIG = {
     "backends": {
         "enable": ["atspi", "opencv"],
         "atspi": {
-            "match_rules": {
+            "application_rules": {
                 "default": {
                     "states": [
                         Atspi.StateType.SENSITIVE,
@@ -70,6 +70,13 @@ DEFAULT_CONFIG = {
                     "roles_match_type": Atspi.CollectionMatchType.NONE,
                 },
             },
+        },
+        "opencv": {
+            "application_rules": {
+                "default": {
+                    "invert_screenshot_colors": False,
+                }
+            }
         },
     },
     "alphabet": "asdfgqwertzxcvbhjklyuiopnm",

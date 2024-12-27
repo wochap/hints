@@ -20,13 +20,13 @@ class AtspiBackend(HintsBackend):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.backend_name = "atspi"
         self.states = set()
         self.states_match_type = 0
         self.attributes = {}
         self.attributes_match_type = 0
         self.roles = set()
         self.roles_match_type = 0
-        self.window_extents = (0, 0, 0, 0)
         self.toolkit = ""
         self.toolkit_version = ""
 
@@ -252,11 +252,10 @@ class AtspiBackend(HintsBackend):
                 children,
             )
 
-    def active_window(self) -> tuple[Atspi.Accessible, str] | None:
-        """Get the current accessible window in focus.
+    def get_atspi_active_window(self) -> Atspi.Accessible | None:
+        """Get the current accessible window in focus with Atspi.
 
-        :return Focused window / accessible root element and the
-        application name for the top level window.
+        :return: Atspi focused window / accessible root element.
         """
         desktop = Atspi.get_desktop(0)
         for app_index in range(desktop.get_child_count()):
@@ -267,8 +266,15 @@ class AtspiBackend(HintsBackend):
                 continue
             for window_index in range(window.get_child_count()):
                 current_window = window.get_child_at_index(window_index)
-                if current_window.get_state_set().contains(Atspi.StateType.ACTIVE):
-                    return current_window, window.get_name()
+                # Some hidden windows that are minimized to status trays
+                # (like discord) will still have the Atspi.StateType.Active
+                # state, so the pid from the window manger allows us to filter
+                # out such applications.
+                if (
+                    current_window.get_state_set().contains(Atspi.StateType.ACTIVE)
+                    and current_window.get_process_id() == self.active_window.get_pid()
+                ):
+                    return current_window
 
         return None
 
@@ -281,30 +287,22 @@ class AtspiBackend(HintsBackend):
             centered children coordinates.
         """
         children: set[Child] = set()
-        top_level_window = self.active_window()
+        window = self.get_atspi_active_window()
 
-        if top_level_window:
-            window, application_name = top_level_window
-            # Some GUI toolkits do not support top level positioning (GTK4) or
-            # under some environments Atspi gets the incorrect window extents.
-            # So we are relying on the window manger to get the window extents
-            self.window_extents = self.get_extents_from_window_manager()
+        if window:
             application = window.get_application()
 
             self.toolkit = application.get_toolkit_name()
             self.toolkit_version = application.get_toolkit_version()
 
-            all_match_rules = self.config["backends"]["atspi"]["match_rules"]
-            match_rules = all_match_rules["default"] | all_match_rules.get(
-                application_name, {}
-            )
+            application_rules = self.get_application_rules()
 
-            self.states = set(match_rules["states"])
-            self.states_match_type = match_rules["states_match_type"]
-            self.attributes = match_rules["attributes"]
-            self.attributes_match_type = match_rules["attributes_match_type"]
-            self.roles = set(match_rules["roles"])
-            self.roles_match_type = match_rules["roles_match_type"]
+            self.states = set(application_rules["states"])
+            self.states_match_type = application_rules["states_match_type"]
+            self.attributes = application_rules["attributes"]
+            self.attributes_match_type = application_rules["attributes_match_type"]
+            self.roles = set(application_rules["roles"])
+            self.roles_match_type = application_rules["roles_match_type"]
 
             self.get_children_of_interest(
                 window,
@@ -313,7 +311,7 @@ class AtspiBackend(HintsBackend):
 
             logger.debug(
                 "Finished gathering hints for '%s'. Toolkit: %s v:%s",
-                application_name,
+                self.application_name,
                 self.toolkit,
                 self.toolkit_version,
             )

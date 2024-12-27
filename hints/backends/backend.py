@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from hints.utils import HintsConfig
 from hints.window_manager import WindowManager
@@ -14,9 +14,32 @@ class HintsBackend:
     """Hints Backend Base Class."""
 
     def __init__(self, config: HintsConfig):
+        """Hints Backend constructor.
+
+        :param config: Hints config.
+        """
         self.config = config
-        self.window_extents: tuple[int, int, int, int] | None = None
+
         self.window_manager = WindowManager()
+        self.backend_name = ""
+        self.active_window = self.get_active_window()
+        self.window_extents = self.active_window.get_geometry()
+        self.application_name = self.active_window.get_class_instance_name()
+
+    def get_application_rules(self) -> dict[str, Any]:
+        """Get the application rules from the config file.
+
+        This uses the "default" application rule and overwrites any
+        rules specific to an application by the application name.
+
+        :return: The application rules
+        """
+        application_rules = self.config["backends"][self.backend_name][
+            "application_rules"
+        ]
+        return application_rules["default"] | application_rules.get(
+            self.application_name, {}
+        )
 
     def get_children(self) -> set[Child]:
         """Get Children from backend."""

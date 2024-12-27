@@ -4,27 +4,38 @@ from typing import TYPE_CHECKING
 
 import cv2
 import numpy
-from PIL import ImageGrab
+from PIL import ImageGrab, ImageChops
 
 from hints.backends.backend import HintsBackend
 from hints.backends.exceptions import AccessibleChildrenNotFoundError
 from hints.child import Child
+import logging
 
 if TYPE_CHECKING:
     from PIL.Image import Image
+
+logger = logging.getLogger(__name__)
 
 
 class OpenCV(HintsBackend):
     """OpenCV Hints Backend."""
 
-    def screenshot(self, window_extents: tuple[int, int, int, int]) -> Image:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.backend_name = "opencv"
+
+    def screenshot(
+        self, window_extents: tuple[int, int, int, int], invert: bool = False
+    ) -> Image:
         """Take a screenshot of a window specified by its extents.
 
         :param window_extents: The extents of a window to screenshot.
+        :param invert: Invert the image colors. This exists because
+            image recognition yields better results with dark themes.
         :return: Screeshot image.
         """
         x, y, w, h = window_extents
-        return ImageGrab.grab(
+        im = ImageGrab.grab(
             (
                 x,
                 y,
@@ -32,6 +43,9 @@ class OpenCV(HintsBackend):
                 y + h,
             )
         )
+        if invert:
+            im = ImageChops.invert(im)
+        return im
 
     def get_children(self) -> set[Child]:
         """Get children.
@@ -40,11 +54,17 @@ class OpenCV(HintsBackend):
         """
         children = set()
         window = self.get_active_window()
-        self.window_extents = window.get_geometry()
 
         if self.window_extents:
+            application_rules = self.get_application_rules()
             gray_image = cv2.cvtColor(
-                numpy.array(self.screenshot(self.window_extents)), cv2.COLOR_BGR2GRAY
+                numpy.array(
+                    self.screenshot(
+                        self.window_extents,
+                        invert=application_rules["invert_screenshot_colors"],
+                    )
+                ),
+                cv2.COLOR_BGR2GRAY,
             )
 
             _, thresh = cv2.threshold(
@@ -68,6 +88,12 @@ class OpenCV(HintsBackend):
                             height=h,
                         )
                     )
+
+            logger.debug(
+                "Finished gathering hints for '%s'",
+                self.application_name,
+            )
+
             if not children:
                 raise AccessibleChildrenNotFoundError(window)
 
