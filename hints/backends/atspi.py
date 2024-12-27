@@ -27,6 +27,54 @@ class AtspiBackend(HintsBackend):
         self.roles = set()
         self.roles_match_type = 0
         self.window_extents = (0, 0, 0, 0)
+        self.toolkit = ""
+        self.toolkit_version = ""
+
+    def get_relative_and_absolute_extents(
+        self, root: Atspi.Accessible
+    ) -> tuple[tuple[int, int], tuple[int, int], tuple[int, int]]:
+        """Get relative position, absolute position, and extents for accessible
+        element.
+
+        Some DE/WMs like gnome don't yield the correct relative postions
+        for elements for some tooklits (QT). This function computes the
+        relative postion of elements from the absolute position and top
+        level window extents. Except for toolkits that do not allow top
+        level positioning.
+
+        :param root: Accessible element to get extents for.
+        :return: absolute_position, relative_position, and extents.
+        """
+        start_x, start_y, _, _ = self.window_extents
+
+        # GTK4 does not support absolute positioning, so we work off relative positions
+        if (
+            self.toolkit == "GTK"
+            and int(str(self.toolkit_version).split(".", maxsplit=1)[0]) >= 4
+        ):
+
+            relative_extents = root.get_extents(Atspi.CoordType.WINDOW)
+
+            # Assuminmg that checking for the validity of elements has already
+            # been done here with the proper states / roles. However, sometimes
+            # in GTK4 elements have negative relative positioning for items in
+            # corners ie: (-1,0).
+            x = abs(relative_extents.x)
+            y = abs(relative_extents.y)
+
+            return (
+                (x + start_x, y + start_y),
+                (x, y),
+                (relative_extents.width, relative_extents.height),
+            )
+
+        absolute_extents = root.get_extents(Atspi.CoordType.SCREEN)
+
+        return (
+            (absolute_extents.x, absolute_extents.y),
+            (absolute_extents.x - start_x, absolute_extents.y - start_y),
+            (absolute_extents.width, absolute_extents.height),
+        )
 
     def validate_match_conditions(
         self,
@@ -97,6 +145,9 @@ class AtspiBackend(HintsBackend):
         :param children: Set of coordinates for children to use to store
             found children coordinates.
         """
+        absolute_position, relative_position, size = (
+            self.get_relative_and_absolute_extents(root)
+        )
         try:
             if (
                 self.validate_match_conditions(root, "state")
@@ -111,20 +162,21 @@ class AtspiBackend(HintsBackend):
                 logger.debug("role: %s", root.get_role())
                 logger.debug("states: %s", root.get_state_set().get_states())
 
-                relative_pos = root.get_position(Atspi.CoordType.WINDOW)
-                size = root.get_size()
+                absolute_position, relative_position, size = (
+                    self.get_relative_and_absolute_extents(root)
+                )
                 children.add(
                     Child(
                         relative_position=(
-                            relative_pos.x,
-                            relative_pos.y,
+                            relative_position[0],
+                            relative_position[1],
                         ),
                         absolute_position=(
-                            relative_pos.x + self.window_extents[0],
-                            relative_pos.y + self.window_extents[1],
+                            absolute_position[0],
+                            absolute_position[1],
                         ),
-                        width=size.x,
-                        height=size.y,
+                        width=size[0],
+                        height=size[1],
                     )
                 )
         except:
@@ -177,20 +229,15 @@ class AtspiBackend(HintsBackend):
                 logger.debug("role: %s", match.get_role())
                 logger.debug("states: %s", match.get_state_set().get_states())
 
-                relative_pos = match.get_position(Atspi.CoordType.WINDOW)
-                size = match.get_size()
+                absolute_position, relative_position, size = (
+                    self.get_relative_and_absolute_extents(match)
+                )
                 children.add(
                     Child(
-                        relative_position=(
-                            relative_pos.x,
-                            relative_pos.y,
-                        ),
-                        absolute_position=(
-                            relative_pos.x + self.window_extents[0],
-                            relative_pos.y + self.window_extents[1],
-                        ),
-                        width=size.x,
-                        height=size.y,
+                        relative_position=(relative_position[0], relative_position[1]),
+                        absolute_position=(absolute_position[0], absolute_position[1]),
+                        width=size[0],
+                        height=size[1],
                     )
                 )
         else:
@@ -205,18 +252,23 @@ class AtspiBackend(HintsBackend):
                 children,
             )
 
-    def active_window(self) -> Atspi.Accessible | None:
+    def active_window(self) -> tuple[Atspi.Accessible, str] | None:
         """Get the current accessible window in focus.
 
-        :return Focused window / accessible root element.
+        :return Focused window / accessible root element and the
+        application name for the top level window.
         """
         desktop = Atspi.get_desktop(0)
         for app_index in range(desktop.get_child_count()):
             window = desktop.get_child_at_index(app_index)
+            # Gnome creates a mutter application that is also focused.
+            # This is not what we want, so we are skipping it.
+            if "mutter-x11-frames" in window.get_description():
+                continue
             for window_index in range(window.get_child_count()):
                 current_window = window.get_child_at_index(window_index)
                 if current_window.get_state_set().contains(Atspi.StateType.ACTIVE):
-                    return current_window
+                    return current_window, window.get_name()
 
         return None
 
@@ -229,34 +281,22 @@ class AtspiBackend(HintsBackend):
             centered children coordinates.
         """
         children: set[Child] = set()
-        window = self.active_window()
+        top_level_window = self.active_window()
 
-        if window:
+        if top_level_window:
+            window, application_name = top_level_window
+            # Some GUI toolkits do not support top level positioning (GTK4) or
+            # under some environments Atspi gets the incorrect window extents.
+            # So we are relying on the window manger to get the window extents
+            self.window_extents = self.get_extents_from_window_manager()
             application = window.get_application()
-            toolkit = application.get_toolkit_name()
-            version = application.get_toolkit_version()
 
-            logger.debug("Gathering hints for '%s'", application.name)
-
-            # GTK4 does not support desktop level positioning
-            if toolkit == "GTK" and int(str(version).split(".", maxsplit=1)[0]) >= 4:
-                logger.debug(
-                    "This application is know not to support Atspi extents functionality,"
-                    "falling back to getting information from the window manager."
-                )
-                self.window_extents = self.get_extents_from_window_manager()
-            else:
-                atspi_extents = window.get_extents(Atspi.CoordType.SCREEN)
-                self.window_extents = (
-                    atspi_extents.x,
-                    atspi_extents.y,
-                    atspi_extents.width,
-                    atspi_extents.height,
-                )
+            self.toolkit = application.get_toolkit_name()
+            self.toolkit_version = application.get_toolkit_version()
 
             all_match_rules = self.config["backends"]["atspi"]["match_rules"]
             match_rules = all_match_rules["default"] | all_match_rules.get(
-                application.name, {}
+                application_name, {}
             )
 
             self.states = set(match_rules["states"])
@@ -269,6 +309,13 @@ class AtspiBackend(HintsBackend):
             self.get_children_of_interest(
                 window,
                 children,
+            )
+
+            logger.debug(
+                "Finished gathering hints for '%s'. Toolkit: %s v:%s",
+                application_name,
+                self.toolkit,
+                self.toolkit_version,
             )
 
             if not children:

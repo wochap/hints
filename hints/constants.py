@@ -56,6 +56,7 @@ DEFAULT_CONFIG = {
                         Atspi.Role.DESCRIPTION_LIST,
                         Atspi.Role.SCROLL_PANE,
                         Atspi.Role.TABLE,
+                        Atspi.Role.GROUPING,
                         # text
                         Atspi.Role.STATIC,
                         Atspi.Role.HEADING,
