@@ -35,6 +35,7 @@ DEFAULT_CONFIG = {
         "atspi": {
             "application_rules": {
                 "default": {
+                    "scale_factor": 1,
                     "states": [
                         Atspi.StateType.SENSITIVE,
                         Atspi.StateType.SHOWING,

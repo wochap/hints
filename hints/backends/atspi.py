@@ -29,6 +29,7 @@ class AtspiBackend(HintsBackend):
         self.roles_match_type = 0
         self.toolkit = ""
         self.toolkit_version = ""
+        self.scale_factor = 1
 
     def get_relative_and_absolute_extents(
         self, root: Atspi.Accessible
@@ -59,21 +60,35 @@ class AtspiBackend(HintsBackend):
             # been done here with the proper states / roles. However, sometimes
             # in GTK4 elements have negative relative positioning for items in
             # corners ie: (-1,0).
-            x = abs(relative_extents.x)
-            y = abs(relative_extents.y)
+            x = abs(relative_extents.x) * self.scale_factor
+            y = abs(relative_extents.y) * self.scale_factor
 
             return (
-                (x + start_x, y + start_y),
+                (
+                    x + start_x,
+                    y + start_y,
+                ),
                 (x, y),
-                (relative_extents.width, relative_extents.height),
+                (
+                    relative_extents.width * self.scale_factor,
+                    relative_extents.height * self.scale_factor,
+                ),
             )
 
         absolute_extents = root.get_extents(Atspi.CoordType.SCREEN)
+        x = absolute_extents.x * self.scale_factor
+        y = absolute_extents.y * self.scale_factor
 
         return (
-            (absolute_extents.x, absolute_extents.y),
-            (absolute_extents.x - start_x, absolute_extents.y - start_y),
-            (absolute_extents.width, absolute_extents.height),
+            (x, y),
+            (
+                x - start_x,
+                y - start_y,
+            ),
+            (
+                absolute_extents.width * self.scale_factor,
+                absolute_extents.height * self.scale_factor,
+            ),
         )
 
     def validate_match_conditions(
@@ -303,6 +318,7 @@ class AtspiBackend(HintsBackend):
             self.attributes_match_type = application_rules["attributes_match_type"]
             self.roles = set(application_rules["roles"])
             self.roles_match_type = application_rules["roles_match_type"]
+            self.scale_factor = application_rules["scale_factor"]
 
             self.get_children_of_interest(
                 window,
