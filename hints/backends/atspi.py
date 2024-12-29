@@ -160,9 +160,6 @@ class AtspiBackend(HintsBackend):
         :param children: Set of coordinates for children to use to store
             found children coordinates.
         """
-        absolute_position, relative_position, size = (
-            self.get_relative_and_absolute_extents(root)
-        )
         try:
             if (
                 self.validate_match_conditions(root, "state")
