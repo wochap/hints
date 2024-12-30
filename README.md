@@ -129,3 +129,4 @@ At this point, hints should be installed locally in the virtual environment, you
 ## Development tips
 
 - If you are making updates that impact hints, you will most likely need to test displaying hints and might find yourself executing hints but not being quick enough to switch to a window to see hints. To get around this, you can execute `hints` with a short pause in your shell: `sleep 0.5; hints`. This way you can have time to switch to a window and see any errors / logs in your shell.
+- If `hints` is consuming all keyboard inputs on Xorg and you're trapped:  switch to a virtual terminal with e.g. `Ctrl+Alt+F2`, login, and run `killall hints`
