@@ -56,12 +56,16 @@ class AtspiBackend(HintsBackend):
 
             relative_extents = root.get_extents(Atspi.CoordType.WINDOW)
 
-            # Assuminmg that checking for the validity of elements has already
-            # been done here with the proper states / roles. However, sometimes
-            # in GTK4 elements have negative relative positioning for items in
-            # corners ie: (-1,0).
-            x = abs(relative_extents.x) * self.scale_factor
-            y = abs(relative_extents.y) * self.scale_factor
+            x = relative_extents.x
+            y = relative_extents.y
+
+            # Sometimes in GTK4 elements have negative relative positioning for
+            # items in corners ie: (-1,0).
+            if x == -1:
+                x = abs(x)
+
+            x *= self.scale_factor
+            y *= self.scale_factor
 
             return (
                 (
@@ -160,6 +164,15 @@ class AtspiBackend(HintsBackend):
         :param children: Set of coordinates for children to use to store
             found children coordinates.
         """
+
+        absolute_position, relative_position, size = (
+            self.get_relative_and_absolute_extents(root)
+        )
+
+        # exit early for elements that are not visible
+        if relative_position[0] < 0 or relative_position[1] < 0:
+            return
+
         try:
             if (
                 self.validate_match_conditions(root, "state")
@@ -174,9 +187,6 @@ class AtspiBackend(HintsBackend):
                 logger.debug("role: %s", root.get_role())
                 logger.debug("states: %s", root.get_state_set().get_states())
 
-                absolute_position, relative_position, size = (
-                    self.get_relative_and_absolute_extents(root)
-                )
                 children.add(
                     Child(
                         relative_position=(
@@ -233,6 +243,15 @@ class AtspiBackend(HintsBackend):
             )
 
             for match in matches:
+
+                absolute_position, relative_position, size = (
+                    self.get_relative_and_absolute_extents(match)
+                )
+
+                # exit early for elements that are not visible
+                if relative_position[0] < 0 or relative_position[1] < 0:
+                    continue
+
                 logger.debug(
                     "Accessible element matched. Name: %s, ID: %d",
                     match.name,
@@ -241,9 +260,6 @@ class AtspiBackend(HintsBackend):
                 logger.debug("role: %s", match.get_role())
                 logger.debug("states: %s", match.get_state_set().get_states())
 
-                absolute_position, relative_position, size = (
-                    self.get_relative_and_absolute_extents(match)
-                )
                 children.add(
                     Child(
                         relative_position=(relative_position[0], relative_position[1]),
