@@ -38,6 +38,8 @@ QT_ACCESSIBILITY=1
 QT_LINUX_ACCESSIBILITY_ALWAYS_ON=1
 ```
 
+Note: If you are seeing hints all over the place instead of right on top of elements plese read the [backends section in the wiki configuration guide](https://github.com/AlfredoSequeida/hints/wiki/Configuration-guide#backends) to understand why. This might mean that you have not enabled accessibility, there is something else you need to do for the application you are drawing hints for, or that the current application does not support the atspi backend.
+
 3. Install hints:
 
 Below you will find installation instructions for some popular linux distros bases. The setup is as follows:
