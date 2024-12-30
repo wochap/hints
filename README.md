@@ -27,7 +27,16 @@ Note: Currently hints only works on Linux X11.
 
 1. You will need to have some sort of [compositing](https://wiki.archlinux.org/title/Xorg#Composite) setup so that you can properly overlay hints over windows with the correct level of transparency. Otherwise, the overlay will just cover the entire screen; not allowing you to see what is under the overlay.
 
-2. You will need to enable accessibility for your system. If you use a Desktop Environment, this might already be enabled by default. Otherwise, there is a guide [here, take a look at "5 Troubleshooting"](https://wiki.archlinux.org/title/Accessibility).
+2. You will need to enable accessibility for your system. If you use a Desktop Environment, this might already be enabled by default. If you find that hints does not work or works for some apps and not others add the following to `/etc/environment`
+
+```
+ACCESSIBILITY_ENABLED=1
+GTK_MODULES=gail:atk-bridge
+OOO_FORCE_DESKTOP=gnome
+GNOME_ACCESSIBILITY=1
+QT_ACCESSIBILITY=1
+QT_LINUX_ACCESSIBILITY_ALWAYS_ON=1
+```
 
 3. Install hints:
 
