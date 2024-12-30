@@ -1,4 +1,4 @@
-Note: This is still work in progress and only works on Linux X11, with little wayland support.
+Note: This is still work in progress and only works on Linux X11 (no Wayland support as of now).
 
 <p align="center">
   <img src="https://github.com/user-attachments/assets/bca7fb8e-a4ad-435b-aa40-c26dbb017239" alt="hints" />
