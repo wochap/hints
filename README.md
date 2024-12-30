@@ -1,5 +1,3 @@
-Note: This is still work in progress and only works on Linux X11 (no Wayland support as of now).
-
 <p align="center">
   <img src="https://github.com/user-attachments/assets/bca7fb8e-a4ad-435b-aa40-c26dbb017239" alt="hints" />
   <a href="https://www.keytilt.xyz" target="_blank">
@@ -21,11 +19,11 @@ Navigate GUIs without a mouse by typing hints in combination with modifier keys.
 
 Don't like the keybindings? That's ok, you can change them.
 
-
-
 # Installing
 
 ## System Requirements
+
+Note: Currently hints only works on Linux X11.
 
 1. You will need to have some sort of [compositing](https://wiki.archlinux.org/title/Xorg#Composite) setup so that you can properly overlay hints over windows with the correct level of transparency. Otherwise, the overlay will just cover the entire screen; not allowing you to see what is under the overlay.
 
