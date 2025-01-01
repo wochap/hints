@@ -5,6 +5,8 @@ from typing import Literal
 
 from gi import require_version
 
+from hints.window_systems.window_system import WindowSystem, WindowSystemType
+
 require_version("Atspi", "2.0")
 from gi.repository import Atspi
 
@@ -31,10 +33,13 @@ class AtspiBackend(HintsBackend):
         self.toolkit_version = ""
         self.scale_factor = 1
 
+        self.application_name = self.window_system.focused_applicaiton_name
+        self.window_extents = self.window_system.focused_window_extents
+
     def get_relative_and_absolute_extents(
         self, root: Atspi.Accessible
     ) -> tuple[tuple[int, int], tuple[int, int], tuple[int, int]]:
-        """Get relative position, absolute position, and extents for accessible
+        """Get absolute position, relative position, and extents for accessible
         element.
 
         Some DE/WMs like gnome don't yield the correct relative postions
@@ -48,8 +53,8 @@ class AtspiBackend(HintsBackend):
         """
         start_x, start_y, _, _ = self.window_extents
 
-        # GTK4 does not support absolute positioning, so we work off relative positions
-        if (
+        # GTK4 and Wayland do not support absolute positioning, so we work off relative positions
+        if self.window_system.window_system_type == WindowSystemType.WAYLAND or (
             self.toolkit == "GTK"
             and int(str(self.toolkit_version).split(".", maxsplit=1)[0]) >= 4
         ):
@@ -300,7 +305,7 @@ class AtspiBackend(HintsBackend):
                 # out such applications.
                 if (
                     current_window.get_state_set().contains(Atspi.StateType.ACTIVE)
-                    and current_window.get_process_id() == self.active_window.get_pid()
+                    # and current_window.get_process_id() == self.active_window.get_pid()
                 ):
                     return current_window
 

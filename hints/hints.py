@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import logging
 from argparse import ArgumentParser
-from itertools import product
+from itertools import product, repeat
 from math import ceil, log
 from time import sleep, time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Type
 
 from gi import require_version
 from pynput.mouse import Button, Controller
@@ -14,13 +14,17 @@ from hints.backends.atspi import AtspiBackend
 from hints.backends.exceptions import AccessibleChildrenNotFoundError
 from hints.backends.opencv import OpenCV
 from hints.constants import MOUSE_GRAB_PAUSE
+from hints.exceptions import WindowSystemNotSupported
 from hints.huds.interceptor import InterceptorWindow
 from hints.huds.overlay import OverlayWindow
+from hints.mouse import MouseButtonActions, MouseButtons, click
 from hints.utils import HintsConfig, load_config
 
 logger = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    from hints.window_systems.window_system import WindowSystem
+
     from .child import Child
 
 try:
@@ -57,7 +61,9 @@ def get_hints(children: set, alphabet: str | set[str]) -> dict[str, Child]:
     return hints
 
 
-def hint_mode(config: HintsConfig, mouse: Controller):
+def hint_mode(
+    config: HintsConfig, mouse: Controller, window_system: Type[WindowSystem]
+):
     """Hint mode to interact with hints on screen.
 
     :param config: Hints config.
@@ -72,7 +78,7 @@ def hint_mode(config: HintsConfig, mouse: Controller):
     for backend in backends:
 
         start = time()
-        current_backend = backends_map[backend](config)
+        current_backend = backends_map[backend](config, window_system())
         logger.debug(
             "Attempting to get accessible children using the '%s' backend.",
             backend,
@@ -92,7 +98,7 @@ def hint_mode(config: HintsConfig, mouse: Controller):
                 },
             )
 
-            window_extents = current_backend.get_window_extents()
+            window_extents = current_backend.window_system.focused_window_extents
 
         except AccessibleChildrenNotFoundError:
             logger.debug(
@@ -103,22 +109,32 @@ def hint_mode(config: HintsConfig, mouse: Controller):
         if window_extents and hints:
             mouse_action: dict[str, Any] = {}
             x, y, width, height = window_extents
+
             app = OverlayWindow(
-                x,
-                y,
+                x + config["overlay_x_offset"],
+                y + config["overlay_y_offset"],
                 width,
                 height,
                 config=config,
                 hints=hints,
                 mouse_action=mouse_action,
+                is_wayland=IS_WAYLAND,
             )
 
             if IS_WAYLAND:
                 GtkLayerShell.init_for_window(app)
-                GtkLayerShell.auto_exclusive_zone_enable(app)
+                GtkLayerShell.set_margin(
+                    app, GtkLayerShell.Edge.LEFT, x + config["overlay_x_offset"]
+                )
+                GtkLayerShell.set_margin(
+                    app, GtkLayerShell.Edge.TOP, y + config["overlay_y_offset"]
+                )
                 GtkLayerShell.set_anchor(app, GtkLayerShell.Edge.TOP, True)
                 GtkLayerShell.set_anchor(app, GtkLayerShell.Edge.LEFT, True)
                 GtkLayerShell.set_layer(app, GtkLayerShell.Layer.OVERLAY)
+                GtkLayerShell.set_keyboard_mode(
+                    app, GtkLayerShell.KeyboardMode.EXCLUSIVE
+                )
 
             app.show_all()
             Gtk.main()
@@ -126,15 +142,21 @@ def hint_mode(config: HintsConfig, mouse: Controller):
             if mouse_action:
                 match mouse_action["action"]:
                     case "click":
-                        mouse.position = (mouse_action["x"], mouse_action["y"])
-                        mouse.click(
-                            (
-                                Button.left
-                                if mouse_action["button"] == "left"
-                                else Button.right
-                            ),
+                        click(
+                            mouse_action["x"],
+                            mouse_action["y"],
+                            MouseButtons.LEFT,
+                            (MouseButtonActions.DOWN, MouseButtonActions.UP),
                             mouse_action["repeat"],
                         )
+                        # mouse.click(
+                        #    (
+                        #        Button.left
+                        #        if mouse_action["button"] == "left"
+                        #        else Button.right
+                        #    ),
+                        #    mouse_action["repeat"],
+                        # )
                     case "hover":
                         mouse.position = (mouse_action["x"], mouse_action["y"])
                     case "grab":
@@ -193,9 +215,20 @@ def main():
 
     mouse = Controller()
 
+    window_system = None
+    window_system_name = config["window_system"].lower()
+
+    match window_system_name:
+        case "x11":
+            from hints.window_systems.x11 import X11 as window_system
+        case "sway":
+            from hints.window_systems.sway import Sway as window_system
+        case _:
+            raise WindowSystemNotSupported(window_system_name)
+
     match args.mode:
         case "hint":
-            hint_mode(config, mouse)
+            hint_mode(config, mouse, window_system)
         case "scroll":
             interceptor = InterceptorWindow(
                 0, 0, 1, 1, mouse, {"action": "scroll"}, config

@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 from enum import Enum
+from subprocess import run
 from time import time
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Iterable
 
 from pynput import keyboard
 from pynput.mouse import Button, Controller
@@ -22,6 +23,22 @@ class MouseMode(Enum):
 
     MOVE = 1
     SCROLL = 2
+
+
+class MouseButtons(Enum):
+    LEFT = 0x00
+    RIGHT = 0x01
+    MIDDLE = 0x02
+    SIDE = 0x03
+    EXTR = 0x04
+    FORWARD = 0x05
+    BACK = 0x06
+    TASK = 0x07
+
+
+class MouseButtonActions(Enum):
+    DOWN = 0x40
+    UP = 0x80
 
 
 def on_release(key: KeyCode, mouse: Controller) -> bool | None:
@@ -101,6 +118,31 @@ def do_mouse_action(
         mouse_navigation_action(0, key_press_state["sensitivity"])
     if key == down:
         mouse_navigation_action(0, -key_press_state["sensitivity"])
+
+
+def click(
+    x: int | str,
+    y: int | str,
+    button: MouseButtons,
+    actions: Iterable[MouseButtonActions],
+    repeat: int | str = 1,
+):
+    run(["ydotool", "mousemove", "--absolute", "--", str(x), str(y)], check=True)
+
+    button_mask = button.value
+    for action in actions:
+        button_mask |= action.value
+
+    run(
+        [
+            "ydotool",
+            "click",
+            str(hex(button_mask)),
+            "--repeat",
+            str(repeat),
+        ],
+        check=True,
+    )
 
 
 def on_press(key: KeyCode, config: HintsConfig, mouse: Controller, mode: MouseMode):

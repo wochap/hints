@@ -1,15 +1,15 @@
 from __future__ import annotations
 
+import logging
 from typing import TYPE_CHECKING
 
 import cv2
 import numpy
-from PIL import ImageGrab, ImageChops
+from PIL import ImageChops, ImageGrab
 
 from hints.backends.backend import HintsBackend
 from hints.backends.exceptions import AccessibleChildrenNotFoundError
 from hints.child import Child
-import logging
 
 if TYPE_CHECKING:
     from PIL.Image import Image
@@ -34,6 +34,7 @@ class OpenCV(HintsBackend):
             image recognition yields better results with dark themes.
         :return: Screeshot image.
         """
+        print(window_extents)
         x, y, w, h = window_extents
         im = ImageGrab.grab(
             (
@@ -53,48 +54,47 @@ class OpenCV(HintsBackend):
         :return: Children.
         """
         children = set()
-        window = self.get_active_window()
 
-        if self.window_extents:
-            application_rules = self.get_application_rules()
-            gray_image = cv2.cvtColor(
-                numpy.array(
-                    self.screenshot(
-                        self.window_extents,
-                        invert=application_rules["invert_screenshot_colors"],
-                    )
-                ),
-                cv2.COLOR_BGR2GRAY,
+        application_rules = self.get_application_rules()
+        gray_image = cv2.cvtColor(
+            numpy.array(
+                self.screenshot(
+                    self.window_system.focused_window_extents,
+                    invert=application_rules["invert_screenshot_colors"],
+                )
+            ),
+            cv2.COLOR_BGR2GRAY,
+        )
+
+        _, thresh = cv2.threshold(
+            gray_image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
+        )
+        contours, _ = cv2.findContours(
+            thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+        )
+
+        for contour in contours:
+            x, y, w, h = cv2.boundingRect(contour)
+            children.add(
+                Child(
+                    absolute_position=(
+                        x + self.window_system.focused_window_extents[0],
+                        y + self.window_system.focused_window_extents[1],
+                    ),
+                    relative_position=(x, y),
+                    width=w,
+                    height=h,
+                )
             )
 
-            _, thresh = cv2.threshold(
-                gray_image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
-            )
-            contours, _ = cv2.findContours(
-                thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-            )
+        logger.debug(
+            "Finished gathering hints for '%s'",
+            self.window_system.focused_applicaiton_name,
+        )
 
-            if self.window_extents:
-                for contour in contours:
-                    x, y, w, h = cv2.boundingRect(contour)
-                    children.add(
-                        Child(
-                            absolute_position=(
-                                x + self.window_extents[0],
-                                y + self.window_extents[1],
-                            ),
-                            relative_position=(x, y),
-                            width=w,
-                            height=h,
-                        )
-                    )
-
-            logger.debug(
-                "Finished gathering hints for '%s'",
-                self.application_name,
+        if not children:
+            raise AccessibleChildrenNotFoundError(
+                self.window_system.focused_applicaiton_name
             )
-
-            if not children:
-                raise AccessibleChildrenNotFoundError(window)
 
         return children

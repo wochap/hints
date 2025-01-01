@@ -6,6 +6,7 @@
 </p>
 
 # Click, scroll, and drag with your keyboard
+
 ![demo](https://github.com/user-attachments/assets/838d4043-5e21-4e61-979f-bd8fae7d4d36)
 
 Navigate GUIs without a mouse by typing hints in combination with modifier keys.
@@ -52,7 +53,7 @@ Ubuntu
 
 ```
 sudo apt update && \
-    sudo apt install git libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-4.0 pipx && \
+    sudo apt install git ydotool libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-4.0 pipx && \
     pipx ensurepath && \
     pipx install git+https://github.com/AlfredoSequeida/hints.git
 ```
@@ -60,7 +61,7 @@ sudo apt update && \
 Fedora
 
 ```
-sudo dnf install git gcc gobject-introspection-devel cairo-gobject-devel pkg-config python3-devel gtk4 pipx && \
+sudo dnf install git ydotool gcc gobject-introspection-devel cairo-gobject-devel pkg-config python3-devel gtk4 pipx && \
     pipx ensurepath && \
     pipx install git+https://github.com/AlfredoSequeida/hints.git
 ```
@@ -69,7 +70,7 @@ Arch
 
 ```
 sudo pacman -Sy && \
-    sudo pacman -S git python cairo pkgconf gobject-introspection gtk4 libwnck3 python-pipx && \
+    sudo pacman -S git ydotool python cairo pkgconf gobject-introspection gtk4 libwnck3 python-pipx && \
     pipx ensurepath && \
     pipx install git+https://github.com/AlfredoSequeida/hints.git
 ```
@@ -78,7 +79,21 @@ Finally, source your shell config or restart your terminal.
 
 ## Setup
 
-At this point, hints should be installed, you can verify this by running `hints` in your shell. You will want to bind a keyboard shortcut to `hints` so you don't have to keep typing in a command to open it. This will depend on your OS/ window manager / desktop environment.
+1. Hints uses ydotool for mouse movement sto support both wayland and x11. Ydotool has a service that must be started:
+
+enable the service so that it starts on its own with every reboot:
+
+```
+systemctl --user enable ydotool.service
+```
+
+start the service for the current session:
+
+```
+systemctl --user start ydotool.service
+```
+
+2. At this point, hints should be installed, you can verify this by running `hints` in your shell. You will want to bind a keyboard shortcut to `hints` so you don't have to keep typing in a command to open it. This will depend on your OS/ window manager / desktop environment.
 
 Here is an example of a binding on i3 by editing `.conf/i3/config`:
 
@@ -131,4 +146,4 @@ At this point, hints should be installed locally in the virtual environment, you
 ## Development tips
 
 - If you are making updates that impact hints, you will most likely need to test displaying hints and might find yourself executing hints but not being quick enough to switch to a window to see hints. To get around this, you can execute `hints` with a short pause in your shell: `sleep 0.5; hints`. This way you can have time to switch to a window and see any errors / logs in your shell.
-- If `hints` is consuming all keyboard inputs on Xorg and you're trapped:  switch to a virtual terminal with e.g. `Ctrl+Alt+F2`, login, and run `killall hints`
+- If `hints` is consuming all keyboard inputs on Xorg and you're trapped: switch to a virtual terminal with e.g. `Ctrl+Alt+F2`, login, and run `killall hints`
