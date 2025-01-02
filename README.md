@@ -24,8 +24,6 @@ Don't like the keybindings? That's ok, you can change them.
 
 ## System Requirements
 
-Note: Currently hints only works on Linux X11.
-
 1. You will need to have some sort of [compositing](https://wiki.archlinux.org/title/Xorg#Composite) setup so that you can properly overlay hints over windows with the correct level of transparency. Otherwise, the overlay will just cover the entire screen; not allowing you to see what is under the overlay.
 
 2. You will need to enable accessibility for your system. If you use a Desktop Environment, this might already be enabled by default. If you find that hints does not work or works for some apps and not others add the following to `/etc/environment`
@@ -77,7 +75,7 @@ Finally, source your shell config or restart your terminal.
 
 ## Setup
 
-1. Hints uses ydotool for mouse movement sto support both wayland and x11. Ydotool has a service that must be started:
+1. Hints uses ydotool for mouse movements to support both wayland and x11. Ydotool has a service that must be started:
 
 NOTE: There is currently an issue when using the drag feature with ydotool (if you are using the drag feature in a file manager you might notice your input becomes locked up. If this happens you will need to quit hints by switching to another [tty session](#development-tips) or restarting your system). This is not a bug with hints, but rather a bug with ydotool as it can be replicated without hints.
 
@@ -97,9 +95,9 @@ systemctl --user start ydotool.service
 
 ### Sway
 
-1. Ydotool won't work as expected if mouse acceleration for the ydotool vistual devices is not disabled.
+1. Ydotool won't work as expected if mouse acceleration for the ydotool virtual devices is not disabled.
 
-Find the ydotoold mouse virual device
+Find the ydotoold mouse virtual device
 
 ```
 > swaymsg -t get_inputs
@@ -113,7 +111,7 @@ Input device: ydotoold virtual device
 ...
 ```
 
-Add a rule in your sway config file to remove acceleration for this input device using the `Indetifier` you found.
+Add a rule in your sway config file to remove acceleration for this input device using the `Identifier` you found.
 
 ```
 input 9011:26214:ydotoold_virtual_device {
@@ -127,7 +125,10 @@ reload your sway session.
 swaymsg reload
 ```
 
-2. Install [grim](https://sr.ht/~emersion/grim/) so the opencv backed can take screenshots.
+2. Other dependencies:
+
+   - Install [grim](https://sr.ht/~emersion/grim/) so the opencv backend can take screenshots.
+   - Install [jq](https://github.com/jqlang/jq) to parse `swaymsg`.
 
 3. At this point, hints should be installed, you can verify this by running `hints` in your shell. You will want to bind a keyboard shortcut to `hints` so you don't have to keep typing in a command to open it. This will depend on your OS/ window manager / desktop environment.
 
@@ -155,7 +156,7 @@ For a guide on configuring and using hints, please see the [Wiki](https://github
 
 The easiest ways to contribute are to:
 
-- [Become a sponsor](https://github.com/sponsors/AlfredoSequeida). Hints is a passion project that I really wanted for myself and I am working on it on my spare time. I chose to make it free and open source so that others can benefit. If you find it valuable, donating is a nice way to say thanks. You can donate any amount you want.
+- [Become a sponsor](https://github.com/sponsors/AlfredoSequeida). Hints is a passion project that I really wanted for myself and I am working on it in my spare time. I chose to make it free and open source so that others can benefit. If you find it valuable, donating is a nice way to say thanks. You can donate any amount you want.
 - Report bugs. If you notice something is not working as expected or have an idea on how to make hints better, [open up an issue](https://github.com/AlfredoSequeida/hints/issues/new). This helps everyone out.
 - If you can code, feel free to commit some code! You can see if any issues need solutions or you can create a new feature. If you do want to create a new feature, it's a good idea to create an issue first so we can align on why this feature is needed and if it has a possibility of being merged.
 
@@ -182,4 +183,4 @@ At this point, hints should be installed locally in the virtual environment, you
 ## Development tips
 
 - If you are making updates that impact hints, you will most likely need to test displaying hints and might find yourself executing hints but not being quick enough to switch to a window to see hints. To get around this, you can execute `hints` with a short pause in your shell: `sleep 0.5; hints`. This way you can have time to switch to a window and see any errors / logs in your shell.
-- If `hints` is consuming all keyboard inputs on Xorg and you're trapped: switch to a virtual terminal with e.g. `Ctrl+Alt+F2`, login, and run `killall hints`
+- If `hints` is consuming all keyboard inputs and you're trapped: switch to a virtual terminal with e.g. <kbd>CTRL</kbd>+<kbd>ALT</kbd>+<kbd>F2</kbd>, login, and run `killall hints`. You can then exit with `exit` and switch back to the the previous session (most likely 1): <kbd>CTRL</kbd>+<kbd>ALT</kbd>+<kbd>F1</kbd>
