@@ -4,24 +4,36 @@ import logging
 from argparse import ArgumentParser
 from itertools import product, repeat
 from math import ceil, log
+<<<<<<< Updated upstream
 from time import sleep, time
 from typing import TYPE_CHECKING, Any, Type
+=======
+from time import time
+from typing import Any, Iterable
+>>>>>>> Stashed changes
 
 from gi import require_version
-from pynput.mouse import Button, Controller
 
 from hints.backends.atspi import AtspiBackend
 from hints.backends.exceptions import AccessibleChildrenNotFoundError
 from hints.backends.opencv import OpenCV
+<<<<<<< Updated upstream
 from hints.constants import MOUSE_GRAB_PAUSE
+=======
+>>>>>>> Stashed changes
 from hints.exceptions import WindowSystemNotSupported
 from hints.huds.interceptor import InterceptorWindow
 from hints.huds.overlay import OverlayWindow
 from hints.mouse import MouseButtonActions, MouseButtons, click
 from hints.utils import HintsConfig, load_config
+from hints.window_systems.window_system import WindowSystemType
+
+# from pynput.mouse import Button, Controller
+
 
 logger = logging.getLogger(__name__)
 
+<<<<<<< Updated upstream
 if TYPE_CHECKING:
     from hints.window_systems.window_system import WindowSystem
 
@@ -34,9 +46,49 @@ try:
     IS_WAYLAND = True
 except ValueError:
     IS_WAYLAND = False
+=======
+>>>>>>> Stashed changes
 
 require_version("Gtk", "3.0")
 from gi.repository import Gtk
+
+
+def display_gkt_window(
+    gtk_window: Gtk.Window,
+    x: int,
+    y: int,
+    width: int,
+    height: int,
+    gkt_window_args: Iterable[Any] | None = None,
+    gtk_window_kwargs: dict[str, Any] | None = None,
+    overlay_x_offset: int = 0,
+    overlay_y_offset: int = 0,
+    is_wayland: bool = False,
+):
+
+    window = gtk_window(
+        x + overlay_x_offset,
+        y + overlay_y_offset,
+        width,
+        height,
+        *(gkt_window_args or []),
+        **gtk_window_kwargs,
+    )
+
+    if is_wayland:
+        require_version("GtkLayerShell", "0.1")
+        from gi.repository import GtkLayerShell
+
+        GtkLayerShell.init_for_window(window)
+        GtkLayerShell.set_margin(window, GtkLayerShell.Edge.LEFT, x + overlay_x_offset)
+        GtkLayerShell.set_margin(window, GtkLayerShell.Edge.TOP, y + overlay_y_offset)
+        GtkLayerShell.set_anchor(window, GtkLayerShell.Edge.TOP, True)
+        GtkLayerShell.set_anchor(window, GtkLayerShell.Edge.LEFT, True)
+        GtkLayerShell.set_layer(window, GtkLayerShell.Layer.OVERLAY)
+        GtkLayerShell.set_keyboard_mode(window, GtkLayerShell.KeyboardMode.EXCLUSIVE)
+
+    window.show_all()
+    Gtk.main()
 
 
 def get_hints(children: set, alphabet: str | set[str]) -> dict[str, Child]:
@@ -61,13 +113,17 @@ def get_hints(children: set, alphabet: str | set[str]) -> dict[str, Child]:
     return hints
 
 
+<<<<<<< Updated upstream
 def hint_mode(
     config: HintsConfig, mouse: Controller, window_system: Type[WindowSystem]
 ):
+=======
+def hint_mode(config: HintsConfig, window_system: WindowSystem):
+>>>>>>> Stashed changes
     """Hint mode to interact with hints on screen.
 
     :param config: Hints config.
-    :param mouse: Mouse device.
+    :param window_system: Window System for the session.
     """
     window_extents = None
     hints = {}
@@ -75,10 +131,16 @@ def hint_mode(
     backends_map = {"atspi": AtspiBackend, "opencv": OpenCV}
     backends = config["backends"]["enable"]
 
+    is_wayland = window_system.window_system_type == WindowSystemType.WAYLAND
+
     for backend in backends:
 
         start = time()
+<<<<<<< Updated upstream
         current_backend = backends_map[backend](config, window_system())
+=======
+        current_backend = backends_map[backend](config, window_system)
+>>>>>>> Stashed changes
         logger.debug(
             "Attempting to get accessible children using the '%s' backend.",
             backend,
@@ -110,6 +172,7 @@ def hint_mode(
             mouse_action: dict[str, Any] = {}
             x, y, width, height = window_extents
 
+<<<<<<< Updated upstream
             app = OverlayWindow(
                 x + config["overlay_x_offset"],
                 y + config["overlay_y_offset"],
@@ -139,13 +202,50 @@ def hint_mode(
             app.show_all()
             Gtk.main()
 
+=======
+            display_gkt_window(
+                OverlayWindow,
+                x,
+                y,
+                width,
+                height,
+                gtk_window_kwargs={
+                    "config": config,
+                    "hints": hints,
+                    "mouse_action": mouse_action,
+                    "is_wayland": True,
+                },
+                overlay_x_offset=config["overlay_x_offset"],
+                overlay_y_offset=config["overlay_y_offset"],
+                is_wayland=True,
+            )
+
+>>>>>>> Stashed changes
             if mouse_action:
+
+                mouse_x_offset = 0
+                mouse_y_offset = 0
+
+                match window_system.window_system_name:
+                    case "sway":
+                        mouse_y_offset = window_system.bar_height
+
                 match mouse_action["action"]:
                     case "click":
                         click(
+<<<<<<< Updated upstream
                             mouse_action["x"],
                             mouse_action["y"],
                             MouseButtons.LEFT,
+=======
+                            mouse_action["x"] + mouse_x_offset,
+                            mouse_action["y"] + mouse_y_offset,
+                            (
+                                MouseButtons.LEFT
+                                if mouse_action["button"] == "left"
+                                else MouseButtons.RIGHT
+                            ),
+>>>>>>> Stashed changes
                             (MouseButtonActions.DOWN, MouseButtonActions.UP),
                             mouse_action["repeat"],
                         )
@@ -158,18 +258,30 @@ def hint_mode(
                         #    mouse_action["repeat"],
                         # )
                     case "hover":
-                        mouse.position = (mouse_action["x"], mouse_action["y"])
-                    case "grab":
-                        mouse.position = (mouse_action["x"], mouse_action["y"])
-                        # sleep required to allow time for mouse to move before pressing
-                        # less than 0.2 seconds does not always work
-                        sleep(MOUSE_GRAB_PAUSE)
-                        mouse.press(Button.left)
-                        interceptor = InterceptorWindow(
-                            x, y, 1, 1, mouse, mouse_action, config
+                        click(
+                            mouse_action["x"] + mouse_x_offset,
+                            mouse_action["y"] + mouse_y_offset,
+                            MouseButtons.LEFT,
+                            (),
                         )
-                        interceptor.show_all()
-                        Gtk.main()
+                    case "grab":
+                        click(
+                            mouse_action["x"] + mouse_x_offset,
+                            mouse_action["y"] + mouse_y_offset,
+                            MouseButtons.LEFT,
+                            (MouseButtonActions.DOWN,),
+                        )
+
+                        display_gkt_window(
+                            InterceptorWindow,
+                            x,
+                            y,
+                            1,
+                            1,
+                            gkt_window_args=({"action": "grab"},),
+                            gtk_window_kwargs={"config": config},
+                            is_wayland=is_wayland,
+                        )
 
             # no need to use the next backend if the current one succeeded
             break
@@ -213,7 +325,18 @@ def main():
     else:
         logging.basicConfig(level=logging.INFO, format=custom_format)
 
-    mouse = Controller()
+    window_system = None
+    window_system_name = config["window_system"].lower()
+
+    match window_system_name:
+        case "x11":
+            from hints.window_systems.x11 import X11 as window_system
+        case "sway":
+            from hints.window_systems.sway import Sway as window_system
+        case _:
+            raise WindowSystemNotSupported(window_system_name)
+
+    ws = window_system()
 
     window_system = None
     window_system_name = config["window_system"].lower()
@@ -228,10 +351,19 @@ def main():
 
     match args.mode:
         case "hint":
+<<<<<<< Updated upstream
             hint_mode(config, mouse, window_system)
+=======
+            hint_mode(config, ws)
+>>>>>>> Stashed changes
         case "scroll":
-            interceptor = InterceptorWindow(
-                0, 0, 1, 1, mouse, {"action": "scroll"}, config
+            display_gkt_window(
+                InterceptorWindow,
+                0,
+                0,
+                1,
+                1,
+                gkt_window_args=({"action": "scroll"},),
+                gtk_window_kwargs={"config": config},
+                is_wayland=ws.window_system_type == WindowSystemType.WAYLAND,
             )
-            interceptor.show_all()
-            Gtk.main()

@@ -6,11 +6,18 @@ from enum import Enum
 from subprocess import run
 from time import time
 from typing import TYPE_CHECKING, Any, Iterable
+<<<<<<< Updated upstream
 
 from pynput import keyboard
 from pynput.mouse import Button, Controller
+=======
+>>>>>>> Stashed changes
 
 from hints.utils import HintsConfig
+
+# from pynput import keyboard
+# from pynput.mouse import Button, Controller
+
 
 if TYPE_CHECKING:
     from pynput.keyboard import KeyCode
@@ -34,6 +41,7 @@ class MouseButtons(Enum):
     FORWARD = 0x05
     BACK = 0x06
     TASK = 0x07
+<<<<<<< Updated upstream
 
 
 class MouseButtonActions(Enum):
@@ -43,26 +51,29 @@ class MouseButtonActions(Enum):
 
 def on_release(key: KeyCode, mouse: Controller) -> bool | None:
     """Mouse release event handler.
+=======
+>>>>>>> Stashed changes
 
-    :param key: Key event.
-    :param mouse: Mouse device.
-    :return: keyhandler state
-    """
 
-    KEY_PRESS_STATE.clear()
+class MouseButtonActions(Enum):
+    DOWN = 0x40
+    UP = 0x80
 
-    if key == keyboard.Key.esc:
-        mouse.release(Button.left)
-        return False
 
-    return None
+def scroll(x: int | str, y: int | str, *_args, **_wargs):
+    run(["ydotool", "mousemove", "--wheel", "--", str(x), str(y)], check=True)
+
+
+def move(x: int | str, y: int | str, absolute: bool = True):
+    move_cmd = ["ydotool", "mousemove"]
+    move_cmd += ["--absolute"] if absolute else []
+    run(move_cmd + ["--", str(x), str(y)], check=True)
 
 
 def do_mouse_action(
     key_press_state: dict[str, Any],
     config: HintsConfig,
     key: str,
-    mouse: Controller,
     mode: MouseMode,
 ):
     """Perform mouse action.
@@ -77,7 +88,7 @@ def do_mouse_action(
 
     sensitivity = 1
     rampup_time = 1
-    mouse_navigation_action = mouse.move
+    mouse_navigation_action = move
     left = "h"
     right = "l"
     up = "k"
@@ -94,7 +105,7 @@ def do_mouse_action(
         up = config["mouse_move_down"]
         down = config["mouse_move_up"]
 
-        mouse_navigation_action = mouse.move
+        mouse_navigation_action = move
 
     elif mode == MouseMode.SCROLL:
         sensitivity = config["mouse_scroll_pixel_sensitivity"]
@@ -103,7 +114,7 @@ def do_mouse_action(
         right = config["mouse_scroll_right"]
         up = config["mouse_scroll_up"]
         down = config["mouse_scroll_down"]
-        mouse_navigation_action = mouse.scroll
+        mouse_navigation_action = scroll
 
     key_press_state.setdefault("sensitivity", sensitivity)
 
@@ -111,13 +122,13 @@ def do_mouse_action(
         key_press_state["sensitivity"] += sensitivity
 
     if key == left:
-        mouse_navigation_action(-key_press_state["sensitivity"], 0)
+        mouse_navigation_action(-key_press_state["sensitivity"], 0, absolute=False)
     if key == right:
-        mouse_navigation_action(key_press_state["sensitivity"], 0)
+        mouse_navigation_action(key_press_state["sensitivity"], 0, absolute=False)
     if key == up:
-        mouse_navigation_action(0, key_press_state["sensitivity"])
+        mouse_navigation_action(0, key_press_state["sensitivity"], absolute=False)
     if key == down:
-        mouse_navigation_action(0, -key_press_state["sensitivity"])
+        mouse_navigation_action(0, -key_press_state["sensitivity"], absolute=False)
 
 
 def click(
@@ -126,6 +137,7 @@ def click(
     button: MouseButtons,
     actions: Iterable[MouseButtonActions],
     repeat: int | str = 1,
+<<<<<<< Updated upstream
 ):
     run(["ydotool", "mousemove", "--absolute", "--", str(x), str(y)], check=True)
 
@@ -161,15 +173,68 @@ def on_press(key: KeyCode, config: HintsConfig, mouse: Controller, mode: MouseMo
 
 def mouse_navigation(
     config: HintsConfig, mouse: Controller, mode: MouseMode = MouseMode.MOVE
+=======
+    absolute: bool = True,
+>>>>>>> Stashed changes
 ):
-    """Mouse navigation for mouse movement and scrolling.
+    move(x, y, absolute=absolute)
+    button_mask = button.value
+    for action in actions:
+        button_mask |= action.value
 
-    :param config: Config for hints.
-    :param mouse: Mouse device.
-    :param mode: Mode used for naviation (move / scroll).
-    """
-    with keyboard.Listener(
-        on_press=lambda key: on_press(key, config, mouse, mode),
-        on_release=lambda key: on_release(key, mouse),
-    ) as listener:
-        listener.join()
+    run(
+        [
+            "ydotool",
+            "click",
+            str(hex(button_mask)),
+            "--repeat",
+            str(repeat),
+        ],
+        check=True,
+    )
+
+
+# def on_release(key: KeyCode, mouse: Controller) -> bool | None:
+#    """Mouse release event handler.
+#
+#    :param key: Key event.
+#    :param mouse: Mouse device.
+#    :return: keyhandler state
+#    """
+#
+#    KEY_PRESS_STATE.clear()
+#
+#    if key == keyboard.Key.esc:
+#        mouse.release(Button.left)
+#        return False
+#
+#    return None
+
+# def on_press(key: KeyCode, config: HintsConfig, mouse: Controller, mode: MouseMode):
+#    """Mouse press event handler.
+#
+#    :param key: Key event.
+#    :param config: Hints config.
+#    :param mouse: Mouse device.
+#    :param mode: Mouse mode (move/scroll).
+#    """
+#    try:
+#        do_mouse_action(KEY_PRESS_STATE, config, key.char, mouse, mode)
+#    except AttributeError:
+#        pass
+
+
+# def mouse_navigation(
+#    config: HintsConfig, mouse: Controller, mode: MouseMode = MouseMode.MOVE
+# ):
+#    """Mouse navigation for mouse movement and scrolling.
+#
+#    :param config: Config for hints.
+#    :param mouse: Mouse device.
+#    :param mode: Mode used for naviation (move / scroll).
+#    """
+#    with keyboard.Listener(
+#        on_press=lambda key: on_press(key, config, mouse, mode),
+#        on_release=lambda key: on_release(key, mouse),
+#    ) as listener:
+#        listener.join()

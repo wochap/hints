@@ -5,7 +5,12 @@ from typing import TYPE_CHECKING
 
 import cv2
 import numpy
+<<<<<<< Updated upstream
 from PIL import ImageChops, ImageGrab
+=======
+import pyscreenshot as ImageGrab
+from PIL import ImageChops
+>>>>>>> Stashed changes
 
 from hints.backends.backend import HintsBackend
 from hints.backends.exceptions import AccessibleChildrenNotFoundError
@@ -25,11 +30,17 @@ class OpenCV(HintsBackend):
         self.backend_name = "opencv"
 
     def screenshot(
-        self, window_extents: tuple[int, int, int, int], invert: bool = False
+        self,
+        window_extents: tuple[int, int, int, int],
+        window_extents_offsets: tuple[int, int, int, int] = (0, 0, 0, 0),
+        invert: bool = False,
     ) -> Image:
         """Take a screenshot of a window specified by its extents.
 
-        :param window_extents: The extents of a window to screenshot.
+        :param window_extents: The extents of a window to screenshot
+            (x,y,width,height).
+        :param window_extents_offsets: Any offsets for the screenshot
+            area (window) (x,y,width,height).
         :param invert: Invert the image colors. This exists because
             image recognition yields better results with dark themes.
         :return: Screeshot image.
@@ -38,10 +49,10 @@ class OpenCV(HintsBackend):
         x, y, w, h = window_extents
         im = ImageGrab.grab(
             (
-                x,
-                y,
-                x + w,
-                y + h,
+                x + window_extents_offsets[0],
+                y + window_extents_offsets[1],
+                x + w + window_extents_offsets[2],
+                y + h + window_extents_offsets[3],
             )
         )
         if invert:
@@ -54,12 +65,27 @@ class OpenCV(HintsBackend):
         :return: Children.
         """
         children = set()
+<<<<<<< Updated upstream
 
         application_rules = self.get_application_rules()
+=======
+        application_rules = self.get_application_rules()
+        window_extents_offsets = (0, 0, 0, 0)
+
+        match self.window_system.window_system_name:
+            case "sway":
+                # in sway, we need to exclude the top bar from the screenshot region
+                window_extents_offsets = (0, self.window_system.bar_height, 0, 0)
+
+>>>>>>> Stashed changes
         gray_image = cv2.cvtColor(
             numpy.array(
                 self.screenshot(
                     self.window_system.focused_window_extents,
+<<<<<<< Updated upstream
+=======
+                    window_extents_offsets=window_extents_offsets,
+>>>>>>> Stashed changes
                     invert=application_rules["invert_screenshot_colors"],
                 )
             ),

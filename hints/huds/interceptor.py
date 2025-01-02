@@ -15,9 +15,10 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Any
 
 from gi import require_foreign, require_version
-from hints.utils import HintsConfig
 
-from hints.mouse import MouseMode, do_mouse_action
+from hints.mouse import (MouseButtonActions, MouseButtons, MouseMode, click,
+                         do_mouse_action)
+from hints.utils import HintsConfig
 
 require_version("Gdk", "3.0")
 require_version("Gtk", "3.0")
@@ -39,9 +40,9 @@ class InterceptorWindow(Gtk.Window):
         y_pos: float,
         width: float,
         height: float,
-        mouse: Controller,
         mouse_action: dict[str, Any],
         config: HintsConfig,
+        is_wayland=False,
     ):
         """Hint overlay constructor.
 
@@ -49,7 +50,6 @@ class InterceptorWindow(Gtk.Window):
         :param y_pos: Y window position.
         :param width: Window width.
         :param height: Window height.
-        :param mouse: Mouse device.
         :param mouse_action: Mouse action information.
         :param config: Hints config.
         """
@@ -57,10 +57,10 @@ class InterceptorWindow(Gtk.Window):
 
         self.width = width
         self.height = height
-        self.mouse = mouse
         self.mouse_action = mouse_action
         self.config = config
         self.key_press_state: dict[str, Any] = {}
+        self.is_wayland = is_wayland
 
         # composite setup
         screen = self.get_screen()
@@ -99,26 +99,25 @@ class InterceptorWindow(Gtk.Window):
         keyval_lower = Gdk.keyval_to_lower(keyval)
 
         if keyval_lower == self.config["exit_key"]:
-            self.mouse.release(Button.left)
+            click(0, 0, MouseButtons.LEFT, (MouseButtonActions.UP,), absolute=False)
             Gtk.main_quit()
 
-        match self.mouse_action["action"]:
-            case "grab":
-                do_mouse_action(
-                    self.key_press_state,
-                    self.config,
-                    chr(keyval_lower),
-                    self.mouse,
-                    MouseMode.MOVE,
-                )
-            case "scroll":
-                do_mouse_action(
-                    self.key_press_state,
-                    self.config,
-                    chr(keyval_lower),
-                    self.mouse,
-                    MouseMode.SCROLL,
-                )
+        if keyval_lower:
+            match self.mouse_action["action"]:
+                case "grab":
+                    do_mouse_action(
+                        self.key_press_state,
+                        self.config,
+                        chr(keyval_lower),
+                        MouseMode.MOVE,
+                    )
+                case "scroll":
+                    do_mouse_action(
+                        self.key_press_state,
+                        self.config,
+                        chr(keyval_lower),
+                        MouseMode.SCROLL,
+                    )
 
     def on_grab(self, window):
         """Force keyboard grab to listen for keybaord events.
@@ -126,7 +125,8 @@ class InterceptorWindow(Gtk.Window):
         :param window: Window object.
         """
         while (
-            Gdk.keyboard_grab(window.get_window(), False, Gdk.CURRENT_TIME)
+            not self.is_wayland
+            and Gdk.keyboard_grab(window.get_window(), False, Gdk.CURRENT_TIME)
             != Gdk.GrabStatus.SUCCESS
         ):
             pass

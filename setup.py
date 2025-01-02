@@ -61,6 +61,6 @@ setup(
     license="MIT",
     packages=["hints", "hints.backends", "hints.huds", "hints.window_systems"],
     include_package_data=True,
-    install_requires=["PyGObject", "pynput", "pillow", "opencv-python"],
+    install_requires=["PyGObject", "pynput", "pillow", "pyscreenshot", "opencv-python"],
     entry_points={"console_scripts": ["hints = hints.hints:main"]},
 )

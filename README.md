@@ -81,6 +81,11 @@ Finally, source your shell config or restart your terminal.
 
 1. Hints uses ydotool for mouse movement sto support both wayland and x11. Ydotool has a service that must be started:
 
+<<<<<<< Updated upstream
+=======
+NOTE: There is currently an issue when using the drag feature with ydotool (if you are using the drag feature in a file manager you might notice your input becomes locked up. If this happens you will need to quit hints by switching to another [tty session](#development-tips) or restarting your system). This is not a bug with hints, but rather a bug with ydotool as it can be replicated without hints.
+
+>>>>>>> Stashed changes
 enable the service so that it starts on its own with every reboot:
 
 ```
@@ -93,7 +98,47 @@ start the service for the current session:
 systemctl --user start ydotool.service
 ```
 
+<<<<<<< Updated upstream
 2. At this point, hints should be installed, you can verify this by running `hints` in your shell. You will want to bind a keyboard shortcut to `hints` so you don't have to keep typing in a command to open it. This will depend on your OS/ window manager / desktop environment.
+=======
+2. Window manager specific setups:
+
+### Sway
+
+1. Ydotool won't work as expected if mouse acceleration for the ydotool vistual devices is not disabled.
+
+Find the ydotoold mouse virual device
+
+```
+> swaymsg -t get_inputs
+...
+Input device: ydotoold virtual device
+  Type: Mouse
+  Identifier: 9011:26214:ydotoold_virtual_device
+  Product ID: 26214
+  Vendor ID: 9011
+  Libinput Send Events: enabled
+...
+```
+
+Add a rule in your sway config file to remove acceleration for this input device using the `Indetifier` you found.
+
+```
+input 9011:26214:ydotoold_virtual_device {
+    accel_profile "flat"
+}
+```
+
+reload your sway session.
+
+```
+swaymsg reload
+```
+
+2. Install [grim](https://sr.ht/~emersion/grim/) so the opencv backed can take screenshots.
+
+3. At this point, hints should be installed, you can verify this by running `hints` in your shell. You will want to bind a keyboard shortcut to `hints` so you don't have to keep typing in a command to open it. This will depend on your OS/ window manager / desktop environment.
+>>>>>>> Stashed changes
 
 Here is an example of a binding on i3 by editing `.conf/i3/config`:
 

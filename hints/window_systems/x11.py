@@ -6,7 +6,7 @@ require_version("Wnck", "3.0")
 
 from gi.repository import Wnck
 
-from hints.window_systems.window_system import WindowSystem, WindowSystemType
+from hints.window_systems.window_system import WindowSystem
 
 
 class X11(WindowSystem):
@@ -19,12 +19,14 @@ class X11(WindowSystem):
         self.active_window = None
 
     @property
-    def window_system_type(self) -> WindowSystemType:
-        """Get window_sysetm_type.
+    def window_system_name(self) -> str:
+        """Get the name of the window syste.
 
-        :return: The window system type.
+        This is useful for performing logic specific to a window system.
+
+        :return: The window system name
         """
-        return WindowSystemType.X11
+        return "x11"
 
     @property
     def focused_window_extents(self) -> tuple[int, int, int, int]:

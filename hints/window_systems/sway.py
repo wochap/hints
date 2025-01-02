@@ -3,16 +3,18 @@
 from json import loads
 from subprocess import PIPE, Popen
 
-from hints.window_systems.window_system import WindowSystem, WindowSystemType
+from hints.window_systems.window_system import WindowSystem
 
 
 class Sway(WindowSystem):
     """Sway Window system class."""
 
     def __init__(self):
+        super().__init__()
         self.focused_window = self._get_focused_window_from_sway_tree()
         self.focused_workspace = self._get_focused_workspace_from_sway_tree()
         self.focused_output = self._get_focused_output_from_sway_tree()
+        self.bar_height = self._get_bar_height()
 
     def _get_focused_window_from_sway_tree(self):
         swaytree = Popen(["swaymsg", "-t", "get_tree"], stdout=PIPE)
@@ -44,13 +46,21 @@ class Sway(WindowSystem):
 
         return loads(focused.communicate()[0].decode("utf-8"))
 
-    @property
-    def window_system_type(self) -> WindowSystemType:
-        """Get window_sysetm_type.
+    def _get_bar_height(self) -> int:
+        return (
+            self.focused_output["rect"]["height"]
+            - self.focused_workspace["rect"]["height"]
+        )
 
-        :return: The window system type.
+    @property
+    def window_system_name(self) -> str:
+        """Get the name of the window syste.
+
+        This is useful for performing logic specific to a window system.
+
+        :return: The window system name
         """
-        return WindowSystemType.WAYLAND
+        return "sway"
 
     @property
     def focused_window_extents(self) -> tuple[int, int, int, int]:
@@ -61,14 +71,9 @@ class Sway(WindowSystem):
         # The focused widnow does not included offsets for the top bar (swaybar).
         # So we need to calcuare the height of the bar for the current monitor.
         # Unknow if this will be an issue with other bars on sway.
-        bar_height = (
-            self.focused_output["rect"]["height"]
-            - self.focused_workspace["rect"]["height"]
-        )
-
         return (
             self.focused_window["rect"]["x"],
-            self.focused_window["rect"]["y"] - bar_height,
+            self.focused_window["rect"]["y"] - self.bar_height,
             self.focused_window["rect"]["width"],
             self.focused_window["rect"]["height"],
         )
