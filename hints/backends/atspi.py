@@ -5,11 +5,7 @@ from typing import Literal
 
 from gi import require_version
 
-<<<<<<< Updated upstream
-from hints.window_systems.window_system import WindowSystem, WindowSystemType
-=======
 from hints.window_systems.window_system import WindowSystemType
->>>>>>> Stashed changes
 
 require_version("Atspi", "2.0")
 from gi.repository import Atspi

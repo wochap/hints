@@ -39,8 +39,6 @@ QT_ACCESSIBILITY=1
 QT_LINUX_ACCESSIBILITY_ALWAYS_ON=1
 ```
 
-Note: If you are seeing hints all over the place instead of right on top of elements please read the [backends section in the wiki configuration guide](https://github.com/AlfredoSequeida/hints/wiki/Configuration-guide#backends) to understand why. This might mean that you have not enabled accessibility, there is something else you need to do for the application you are drawing hints for, or that the current application does not support the atspi backend.
-
 3. Install hints:
 
 Below you will find installation instructions for some popular linux distros bases. The setup is as follows:
@@ -81,11 +79,8 @@ Finally, source your shell config or restart your terminal.
 
 1. Hints uses ydotool for mouse movement sto support both wayland and x11. Ydotool has a service that must be started:
 
-<<<<<<< Updated upstream
-=======
 NOTE: There is currently an issue when using the drag feature with ydotool (if you are using the drag feature in a file manager you might notice your input becomes locked up. If this happens you will need to quit hints by switching to another [tty session](#development-tips) or restarting your system). This is not a bug with hints, but rather a bug with ydotool as it can be replicated without hints.
 
->>>>>>> Stashed changes
 enable the service so that it starts on its own with every reboot:
 
 ```
@@ -98,9 +93,6 @@ start the service for the current session:
 systemctl --user start ydotool.service
 ```
 
-<<<<<<< Updated upstream
-2. At this point, hints should be installed, you can verify this by running `hints` in your shell. You will want to bind a keyboard shortcut to `hints` so you don't have to keep typing in a command to open it. This will depend on your OS/ window manager / desktop environment.
-=======
 2. Window manager specific setups:
 
 ### Sway
@@ -138,7 +130,6 @@ swaymsg reload
 2. Install [grim](https://sr.ht/~emersion/grim/) so the opencv backed can take screenshots.
 
 3. At this point, hints should be installed, you can verify this by running `hints` in your shell. You will want to bind a keyboard shortcut to `hints` so you don't have to keep typing in a command to open it. This will depend on your OS/ window manager / desktop environment.
->>>>>>> Stashed changes
 
 Here is an example of a binding on i3 by editing `.conf/i3/config`:
 

@@ -5,12 +5,8 @@ from typing import TYPE_CHECKING
 
 import cv2
 import numpy
-<<<<<<< Updated upstream
-from PIL import ImageChops, ImageGrab
-=======
 import pyscreenshot as ImageGrab
 from PIL import ImageChops
->>>>>>> Stashed changes
 
 from hints.backends.backend import HintsBackend
 from hints.backends.exceptions import AccessibleChildrenNotFoundError
@@ -45,7 +41,6 @@ class OpenCV(HintsBackend):
             image recognition yields better results with dark themes.
         :return: Screeshot image.
         """
-        print(window_extents)
         x, y, w, h = window_extents
         im = ImageGrab.grab(
             (
@@ -65,10 +60,6 @@ class OpenCV(HintsBackend):
         :return: Children.
         """
         children = set()
-<<<<<<< Updated upstream
-
-        application_rules = self.get_application_rules()
-=======
         application_rules = self.get_application_rules()
         window_extents_offsets = (0, 0, 0, 0)
 
@@ -77,15 +68,11 @@ class OpenCV(HintsBackend):
                 # in sway, we need to exclude the top bar from the screenshot region
                 window_extents_offsets = (0, self.window_system.bar_height, 0, 0)
 
->>>>>>> Stashed changes
         gray_image = cv2.cvtColor(
             numpy.array(
                 self.screenshot(
                     self.window_system.focused_window_extents,
-<<<<<<< Updated upstream
-=======
                     window_extents_offsets=window_extents_offsets,
->>>>>>> Stashed changes
                     invert=application_rules["invert_screenshot_colors"],
                 )
             ),

@@ -6,12 +6,6 @@ from enum import Enum
 from subprocess import run
 from time import time
 from typing import TYPE_CHECKING, Any, Iterable
-<<<<<<< Updated upstream
-
-from pynput import keyboard
-from pynput.mouse import Button, Controller
-=======
->>>>>>> Stashed changes
 
 from hints.utils import HintsConfig
 
@@ -41,18 +35,6 @@ class MouseButtons(Enum):
     FORWARD = 0x05
     BACK = 0x06
     TASK = 0x07
-<<<<<<< Updated upstream
-
-
-class MouseButtonActions(Enum):
-    DOWN = 0x40
-    UP = 0x80
-
-
-def on_release(key: KeyCode, mouse: Controller) -> bool | None:
-    """Mouse release event handler.
-=======
->>>>>>> Stashed changes
 
 
 class MouseButtonActions(Enum):
@@ -137,45 +119,7 @@ def click(
     button: MouseButtons,
     actions: Iterable[MouseButtonActions],
     repeat: int | str = 1,
-<<<<<<< Updated upstream
-):
-    run(["ydotool", "mousemove", "--absolute", "--", str(x), str(y)], check=True)
-
-    button_mask = button.value
-    for action in actions:
-        button_mask |= action.value
-
-    run(
-        [
-            "ydotool",
-            "click",
-            str(hex(button_mask)),
-            "--repeat",
-            str(repeat),
-        ],
-        check=True,
-    )
-
-
-def on_press(key: KeyCode, config: HintsConfig, mouse: Controller, mode: MouseMode):
-    """Mouse press event handler.
-
-    :param key: Key event.
-    :param config: Hints config.
-    :param mouse: Mouse device.
-    :param mode: Mouse mode (move/scroll).
-    """
-    try:
-        do_mouse_action(KEY_PRESS_STATE, config, key.char, mouse, mode)
-    except AttributeError:
-        pass
-
-
-def mouse_navigation(
-    config: HintsConfig, mouse: Controller, mode: MouseMode = MouseMode.MOVE
-=======
     absolute: bool = True,
->>>>>>> Stashed changes
 ):
     move(x, y, absolute=absolute)
     button_mask = button.value

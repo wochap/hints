@@ -2,25 +2,16 @@ from __future__ import annotations
 
 import logging
 from argparse import ArgumentParser
-from itertools import product, repeat
+from itertools import product
 from math import ceil, log
-<<<<<<< Updated upstream
-from time import sleep, time
-from typing import TYPE_CHECKING, Any, Type
-=======
 from time import time
 from typing import Any, Iterable
->>>>>>> Stashed changes
 
 from gi import require_version
 
 from hints.backends.atspi import AtspiBackend
 from hints.backends.exceptions import AccessibleChildrenNotFoundError
 from hints.backends.opencv import OpenCV
-<<<<<<< Updated upstream
-from hints.constants import MOUSE_GRAB_PAUSE
-=======
->>>>>>> Stashed changes
 from hints.exceptions import WindowSystemNotSupported
 from hints.huds.interceptor import InterceptorWindow
 from hints.huds.overlay import OverlayWindow
@@ -33,21 +24,6 @@ from hints.window_systems.window_system import WindowSystemType
 
 logger = logging.getLogger(__name__)
 
-<<<<<<< Updated upstream
-if TYPE_CHECKING:
-    from hints.window_systems.window_system import WindowSystem
-
-    from .child import Child
-
-try:
-    require_version("GtkLayerShell", "0.1")
-    from gi.repository import GtkLayerShell
-
-    IS_WAYLAND = True
-except ValueError:
-    IS_WAYLAND = False
-=======
->>>>>>> Stashed changes
 
 require_version("Gtk", "3.0")
 from gi.repository import Gtk
@@ -113,13 +89,7 @@ def get_hints(children: set, alphabet: str | set[str]) -> dict[str, Child]:
     return hints
 
 
-<<<<<<< Updated upstream
-def hint_mode(
-    config: HintsConfig, mouse: Controller, window_system: Type[WindowSystem]
-):
-=======
 def hint_mode(config: HintsConfig, window_system: WindowSystem):
->>>>>>> Stashed changes
     """Hint mode to interact with hints on screen.
 
     :param config: Hints config.
@@ -136,11 +106,7 @@ def hint_mode(config: HintsConfig, window_system: WindowSystem):
     for backend in backends:
 
         start = time()
-<<<<<<< Updated upstream
-        current_backend = backends_map[backend](config, window_system())
-=======
         current_backend = backends_map[backend](config, window_system)
->>>>>>> Stashed changes
         logger.debug(
             "Attempting to get accessible children using the '%s' backend.",
             backend,
@@ -172,37 +138,6 @@ def hint_mode(config: HintsConfig, window_system: WindowSystem):
             mouse_action: dict[str, Any] = {}
             x, y, width, height = window_extents
 
-<<<<<<< Updated upstream
-            app = OverlayWindow(
-                x + config["overlay_x_offset"],
-                y + config["overlay_y_offset"],
-                width,
-                height,
-                config=config,
-                hints=hints,
-                mouse_action=mouse_action,
-                is_wayland=IS_WAYLAND,
-            )
-
-            if IS_WAYLAND:
-                GtkLayerShell.init_for_window(app)
-                GtkLayerShell.set_margin(
-                    app, GtkLayerShell.Edge.LEFT, x + config["overlay_x_offset"]
-                )
-                GtkLayerShell.set_margin(
-                    app, GtkLayerShell.Edge.TOP, y + config["overlay_y_offset"]
-                )
-                GtkLayerShell.set_anchor(app, GtkLayerShell.Edge.TOP, True)
-                GtkLayerShell.set_anchor(app, GtkLayerShell.Edge.LEFT, True)
-                GtkLayerShell.set_layer(app, GtkLayerShell.Layer.OVERLAY)
-                GtkLayerShell.set_keyboard_mode(
-                    app, GtkLayerShell.KeyboardMode.EXCLUSIVE
-                )
-
-            app.show_all()
-            Gtk.main()
-
-=======
             display_gkt_window(
                 OverlayWindow,
                 x,
@@ -220,7 +155,6 @@ def hint_mode(config: HintsConfig, window_system: WindowSystem):
                 is_wayland=True,
             )
 
->>>>>>> Stashed changes
             if mouse_action:
 
                 mouse_x_offset = 0
@@ -233,11 +167,6 @@ def hint_mode(config: HintsConfig, window_system: WindowSystem):
                 match mouse_action["action"]:
                     case "click":
                         click(
-<<<<<<< Updated upstream
-                            mouse_action["x"],
-                            mouse_action["y"],
-                            MouseButtons.LEFT,
-=======
                             mouse_action["x"] + mouse_x_offset,
                             mouse_action["y"] + mouse_y_offset,
                             (
@@ -245,18 +174,9 @@ def hint_mode(config: HintsConfig, window_system: WindowSystem):
                                 if mouse_action["button"] == "left"
                                 else MouseButtons.RIGHT
                             ),
->>>>>>> Stashed changes
                             (MouseButtonActions.DOWN, MouseButtonActions.UP),
                             mouse_action["repeat"],
                         )
-                        # mouse.click(
-                        #    (
-                        #        Button.left
-                        #        if mouse_action["button"] == "left"
-                        #        else Button.right
-                        #    ),
-                        #    mouse_action["repeat"],
-                        # )
                     case "hover":
                         click(
                             mouse_action["x"] + mouse_x_offset,
@@ -338,24 +258,9 @@ def main():
 
     ws = window_system()
 
-    window_system = None
-    window_system_name = config["window_system"].lower()
-
-    match window_system_name:
-        case "x11":
-            from hints.window_systems.x11 import X11 as window_system
-        case "sway":
-            from hints.window_systems.sway import Sway as window_system
-        case _:
-            raise WindowSystemNotSupported(window_system_name)
-
     match args.mode:
         case "hint":
-<<<<<<< Updated upstream
-            hint_mode(config, mouse, window_system)
-=======
             hint_mode(config, ws)
->>>>>>> Stashed changes
         case "scroll":
             display_gkt_window(
                 InterceptorWindow,
