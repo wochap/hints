@@ -5,16 +5,9 @@ from __future__ import annotations
 from enum import Enum
 from subprocess import run
 from time import time
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import Any, Iterable
 
 from hints.utils import HintsConfig
-
-# from pynput import keyboard
-# from pynput.mouse import Button, Controller
-
-
-if TYPE_CHECKING:
-    from pynput.keyboard import KeyCode
 
 KEY_PRESS_STATE: dict[str, Any] = {}
 
@@ -27,6 +20,8 @@ class MouseMode(Enum):
 
 
 class MouseButtons(Enum):
+    """Ydotool Mouse buttons bit mask codes."""
+
     LEFT = 0x00
     RIGHT = 0x01
     MIDDLE = 0x02
@@ -38,15 +33,31 @@ class MouseButtons(Enum):
 
 
 class MouseButtonActions(Enum):
+    """Ydotool Mouse actions bit mask codes."""
+
     DOWN = 0x40
     UP = 0x80
 
 
-def scroll(x: int | str, y: int | str, *_args, **_wargs):
+def scroll(x: int | str, y: int | str, *_args, **_kwargs):
+    """Scroll Mouse using ydotool.
+
+    :param x: X scroll direction.
+    :param y: Y scroll direction. :param *_args: Extra args to use the
+        same interface as move. :param **_kwargs: Extra kwargs to use
+        the same interface as move.
+    """
     run(["ydotool", "mousemove", "--wheel", "--", str(x), str(y)], check=True)
 
 
 def move(x: int | str, y: int | str, absolute: bool = True):
+    """Move mouse using ydotool.
+
+    :param X: X move direction.
+    :param y: Y move direction.
+    :param absolute: Whether to move the mouse using an absolute
+        position.
+    """
     move_cmd = ["ydotool", "mousemove"]
     move_cmd += ["--absolute"] if absolute else []
     run(move_cmd + ["--", str(x), str(y)], check=True)
@@ -121,7 +132,17 @@ def click(
     repeat: int | str = 1,
     absolute: bool = True,
 ):
+    """Click using ydotool.
+
+    :param x: X position to click.
+    :param y: Y position to click.
+    :param button: Button to use for click.
+    :param actions: Actions to use for the click button.
+    :param repeat: Times to repeat a click.
+    :param absolute: Whether the click position is absolute.
+    """
     move(x, y, absolute=absolute)
+
     button_mask = button.value
     for action in actions:
         button_mask |= action.value
@@ -136,49 +157,3 @@ def click(
         ],
         check=True,
     )
-
-
-# def on_release(key: KeyCode, mouse: Controller) -> bool | None:
-#    """Mouse release event handler.
-#
-#    :param key: Key event.
-#    :param mouse: Mouse device.
-#    :return: keyhandler state
-#    """
-#
-#    KEY_PRESS_STATE.clear()
-#
-#    if key == keyboard.Key.esc:
-#        mouse.release(Button.left)
-#        return False
-#
-#    return None
-
-# def on_press(key: KeyCode, config: HintsConfig, mouse: Controller, mode: MouseMode):
-#    """Mouse press event handler.
-#
-#    :param key: Key event.
-#    :param config: Hints config.
-#    :param mouse: Mouse device.
-#    :param mode: Mouse mode (move/scroll).
-#    """
-#    try:
-#        do_mouse_action(KEY_PRESS_STATE, config, key.char, mouse, mode)
-#    except AttributeError:
-#        pass
-
-
-# def mouse_navigation(
-#    config: HintsConfig, mouse: Controller, mode: MouseMode = MouseMode.MOVE
-# ):
-#    """Mouse navigation for mouse movement and scrolling.
-#
-#    :param config: Config for hints.
-#    :param mouse: Mouse device.
-#    :param mode: Mode used for naviation (move / scroll).
-#    """
-#    with keyboard.Listener(
-#        on_press=lambda key: on_press(key, config, mouse, mode),
-#        on_release=lambda key: on_release(key, mouse),
-#    ) as listener:
-#        listener.join()

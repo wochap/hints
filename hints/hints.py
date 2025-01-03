@@ -1,25 +1,31 @@
 from __future__ import annotations
 
 import logging
+from subprocess import run
 from argparse import ArgumentParser
 from itertools import product
 from math import ceil, log
 from time import time
-from typing import Any, Iterable
+from typing import Any, Iterable, TYPE_CHECKING, Type
 
 from gi import require_version
 
 from hints.backends.atspi import AtspiBackend
 from hints.backends.exceptions import AccessibleChildrenNotFoundError
 from hints.backends.opencv import OpenCV
-from hints.exceptions import WindowSystemNotSupported
+from hints.window_systems.exceptions import WindowSystemNotSupported
 from hints.huds.interceptor import InterceptorWindow
 from hints.huds.overlay import OverlayWindow
 from hints.mouse import MouseButtonActions, MouseButtons, click
 from hints.utils import HintsConfig, load_config
-from hints.window_systems.window_system import WindowSystemType
+from hints.window_systems.window_system import WindowSystem
+from hints.window_systems.window_system_type import (
+    get_window_system_type,
+    WindowSystemType,
+)
 
-# from pynput.mouse import Button, Controller
+if TYPE_CHECKING:
+    from hints.window_systems.window_system import WindowSystem
 
 
 logger = logging.getLogger(__name__)
@@ -41,6 +47,21 @@ def display_gkt_window(
     overlay_y_offset: int = 0,
     is_wayland: bool = False,
 ):
+    """Setup and Display gtk window.
+
+    :param gtk_window: The Gtk Window class to display.
+    :param x: X position for window.
+    :param y: Y position for window.
+    :param width: Width for window.
+    :param height: Height for window.
+    :param gkt_window_args: The positional argument for the window
+        instance.
+    :param gtk_widnow_kwargs: The keyword arguments for the window
+        instance.
+    :param overlay_x_offset: X offset position for the window.
+    :param overlay_y_offset: Y offset position for the window.
+    :param is_wayland: Whether this is a wayland session.
+    """
 
     window = gtk_window(
         x + overlay_x_offset,
@@ -48,7 +69,7 @@ def display_gkt_window(
         width,
         height,
         *(gkt_window_args or []),
-        **gtk_window_kwargs,
+        **(gtk_window_kwargs or {}),
     )
 
     if is_wayland:
@@ -148,11 +169,11 @@ def hint_mode(config: HintsConfig, window_system: WindowSystem):
                     "config": config,
                     "hints": hints,
                     "mouse_action": mouse_action,
-                    "is_wayland": True,
+                    "is_wayland": is_wayland,
                 },
                 overlay_x_offset=config["overlay_x_offset"],
                 overlay_y_offset=config["overlay_y_offset"],
-                is_wayland=True,
+                is_wayland=is_wayland,
             )
 
             if mouse_action:
@@ -207,6 +228,46 @@ def hint_mode(config: HintsConfig, window_system: WindowSystem):
             break
 
 
+def get_window_system() -> Type[WindowSystem]:
+    """Get window system.
+
+    :return: The window system for the current system.
+    """
+    window_system_type = get_window_system_type()
+
+    # add new waland wms here, then add a match case below to import the class
+    supported_wayland_wms = {"sway"}
+
+    window_system: Type[WindowSystem] | None = None
+
+    if window_system_type == WindowSystemType.X11:
+        from hints.window_systems.x11 import X11 as window_system
+    if window_system_type == WindowSystemType.WAYLAND:
+
+        # Check if there is a process running that matches the supported_wayland_wms
+        wayland_wm = (
+            run(
+                "ps -e | grep -m 1 -o -F "
+                + " ".join([f"-e {wm}" for wm in supported_wayland_wms]),
+                capture_output=True,
+                shell=True,
+            )
+            .stdout.decode("utf-8")
+            .strip()
+        )
+
+        match wayland_wm:
+            case "sway":
+                from hints.window_systems.sway import Sway as window_system
+
+    if not window_system:
+        # adding x11 for an acurate report of the supported window systems
+        supported_wayland_wms.add("x11")
+        raise WindowSystemNotSupported(supported_wayland_wms)
+
+    return window_system
+
+
 def main():
     """Hints entry point."""
 
@@ -245,18 +306,7 @@ def main():
     else:
         logging.basicConfig(level=logging.INFO, format=custom_format)
 
-    window_system = None
-    window_system_name = config["window_system"].lower()
-
-    match window_system_name:
-        case "x11":
-            from hints.window_systems.x11 import X11 as window_system
-        case "sway":
-            from hints.window_systems.sway import Sway as window_system
-        case _:
-            raise WindowSystemNotSupported(window_system_name)
-
-    ws = window_system()
+    ws = get_window_system()()
 
     match args.mode:
         case "hint":

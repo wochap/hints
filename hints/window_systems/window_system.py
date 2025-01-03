@@ -1,30 +1,16 @@
 """Linux window system."""
 
-from enum import Enum
-from os import getenv
+from __future__ import annotations
+from typing import TYPE_CHECKING
 
+from hints.window_systems.window_system_type import get_window_system_type
 
-class CouldNotIdentifyWindowSystemType(Exception):
-    def __str__(self):
-        return (
-            "Could not identify Window System Type. Is the XDG_SESSION_TYPE"
-            " environment variable set?"
-        )
-
-
-class WindowSystemType(Enum):
-    X11 = "x11"
-    WAYLAND = "wayland"
+if TYPE_CHECKING:
+    from hints.window_systems.window_system_type import WindowSystemType
 
 
 class WindowSystem:
     """Linux base window system class."""
-
-    def __init__(self):
-        self.xdg_session_type = getenv("XDG_SESSION_TYPE")
-
-        if not self.xdg_session_type:
-            raise CouldNotIdentifyWindowSystemType()
 
     @property
     def window_system_type(self) -> WindowSystemType:
@@ -32,7 +18,7 @@ class WindowSystem:
 
         :return: The window system type.
         """
-        return WindowSystemType(self.xdg_session_type)
+        return get_window_system_type()
 
     @property
     def window_system_name(self) -> str:

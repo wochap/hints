@@ -16,7 +16,8 @@ class X11(WindowSystem):
         super().__init__(*args, **kwargs)
 
         self.screen = Wnck.Screen.get_default()
-        self.active_window = None
+        self.screen.force_update()
+        self.active_window = self.screen.get_active_window()
 
     @property
     def window_system_name(self) -> str:
@@ -34,9 +35,6 @@ class X11(WindowSystem):
 
         :return: Active window extents (x, y, width, height).
         """
-        self.screen.force_update()
-        self.active_window = self.screen.get_active_window()
-
         return self.active_window.get_geometry()
 
     @property

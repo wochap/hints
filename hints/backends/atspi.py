@@ -5,7 +5,7 @@ from typing import Literal
 
 from gi import require_version
 
-from hints.window_systems.window_system import WindowSystemType
+from hints.window_systems.window_system_type import WindowSystemType
 
 require_version("Atspi", "2.0")
 from gi.repository import Atspi
@@ -33,9 +33,6 @@ class AtspiBackend(HintsBackend):
         self.toolkit_version = ""
         self.scale_factor = 1
 
-        self.application_name = self.window_system.focused_applicaiton_name
-        self.window_extents = self.window_system.focused_window_extents
-
     def get_relative_and_absolute_extents(
         self, root: Atspi.Accessible
     ) -> tuple[tuple[int, int], tuple[int, int], tuple[int, int]]:
@@ -51,7 +48,7 @@ class AtspiBackend(HintsBackend):
         :param root: Accessible element to get extents for.
         :return: absolute_position, relative_position, and extents.
         """
-        start_x, start_y, _, _ = self.window_extents
+        start_x, start_y, _, _ = self.window_system.focused_window_extents
 
         # GTK4 and Wayland do not support absolute positioning, so we work off relative positions
         if self.window_system.window_system_type == WindowSystemType.WAYLAND or (
@@ -182,7 +179,7 @@ class AtspiBackend(HintsBackend):
             if (
                 self.validate_match_conditions(root, "state")
                 and self.validate_match_conditions(root, "role")
-                and self.window_extents
+                and self.window_system.focused_window_extents
             ):
                 logger.debug(
                     "Accessible element matched. Name: %s, ID: %d",
@@ -242,7 +239,7 @@ class AtspiBackend(HintsBackend):
 
         collection = root.get_collection_iface()
 
-        if collection and self.window_extents:
+        if collection and self.window_system.focused_window_extents:
             matches = collection.get_matches(
                 match_rule, Atspi.CollectionSortOrder.CANONICAL, 0, True
             )
@@ -305,7 +302,8 @@ class AtspiBackend(HintsBackend):
                 # out such applications.
                 if (
                     current_window.get_state_set().contains(Atspi.StateType.ACTIVE)
-                    # and current_window.get_process_id() == self.active_window.get_pid()
+                    and current_window.get_process_id()
+                    == self.window_system.focused_window_pid
                 ):
                     return current_window
 
@@ -345,7 +343,7 @@ class AtspiBackend(HintsBackend):
 
             logger.debug(
                 "Finished gathering hints for '%s'. Toolkit: %s v:%s",
-                self.application_name,
+                self.window_system.focused_applicaiton_name,
                 self.toolkit,
                 self.toolkit_version,
             )
