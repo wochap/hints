@@ -19,11 +19,14 @@ from hints.mouse import MouseButtonActions, MouseButtons, click
 from hints.utils import HintsConfig, load_config
 from hints.window_systems.exceptions import WindowSystemNotSupported
 from hints.window_systems.window_system import WindowSystem
-from hints.window_systems.window_system_type import (WindowSystemType,
-                                                     get_window_system_type)
+from hints.window_systems.window_system_type import (
+    WindowSystemType,
+    get_window_system_type,
+)
 
 if TYPE_CHECKING:
     from hints.window_systems.window_system import WindowSystem
+    from hints.child import Child
 
 
 logger = logging.getLogger(__name__)
@@ -105,7 +108,7 @@ def display_gkt_window(
     Gtk.main()
 
 
-def get_hints(children: set, alphabet: str | set[str]) -> dict[str, Child]:
+def get_hints(children: list[Child], alphabet: str) -> dict[str, Child]:
     """Get hints.
 
     :param children: The children elements of windown that indicate the
@@ -155,11 +158,7 @@ def hint_mode(config: HintsConfig, window_system: WindowSystem):
 
             hints = get_hints(
                 children,
-                alphabet={
-                    character
-                    for character in config["alphabet"]
-                    if not character.isdigit()
-                },
+                alphabet=config["alphabet"],
             )
 
             window_extents = current_backend.window_system.focused_window_extents

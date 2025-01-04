@@ -153,7 +153,7 @@ class AtspiBackend(HintsBackend):
     def recursively_get_children_of_interest(
         self,
         root: Atspi.Accessible,
-        children: set,
+        children: list[Child],
     ):
         """This is a fallback gathering method for when Applications do not
         implement the Collections interface.
@@ -189,7 +189,7 @@ class AtspiBackend(HintsBackend):
                 logger.debug("role: %s", root.get_role())
                 logger.debug("states: %s", root.get_state_set().get_states())
 
-                children.add(
+                children.append(
                     Child(
                         relative_position=(
                             relative_position[0],
@@ -215,7 +215,7 @@ class AtspiBackend(HintsBackend):
     def get_children_of_interest(
         self,
         root: Atspi.Accessible,
-        children: set,
+        children: list[Child],
     ):
         """Get Atspi Accessible children that match a given set of states
         recursively.
@@ -262,7 +262,7 @@ class AtspiBackend(HintsBackend):
                 logger.debug("role: %s", match.get_role())
                 logger.debug("states: %s", match.get_state_set().get_states())
 
-                children.add(
+                children.append(
                     Child(
                         relative_position=(relative_position[0], relative_position[1]),
                         absolute_position=(absolute_position[0], absolute_position[1]),
@@ -317,7 +317,7 @@ class AtspiBackend(HintsBackend):
         :return: The extents of the window containing the children and
             centered children coordinates.
         """
-        children: set[Child] = set()
+        children: list[Child] = []
         window = self.get_atspi_active_window()
 
         if window:

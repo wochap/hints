@@ -36,6 +36,6 @@ class HintsBackend:
             self.window_system.focused_applicaiton_name, {}
         )
 
-    def get_children(self) -> set[Child]:
+    def get_children(self) -> list[Child]:
         """Get Children from backend."""
         raise NotImplementedError()

@@ -54,12 +54,12 @@ class OpenCV(HintsBackend):
             im = ImageChops.invert(im)
         return im
 
-    def get_children(self) -> set[Child]:
+    def get_children(self) -> list[Child]:
         """Get children.
 
         :return: Children.
         """
-        children = set()
+        children: list[Child] = []
         application_rules = self.get_application_rules()
         window_extents_offsets = (0, 0, 0, 0)
 
@@ -88,7 +88,7 @@ class OpenCV(HintsBackend):
 
         for contour in contours:
             x, y, w, h = cv2.boundingRect(contour)
-            children.add(
+            children.append(
                 Child(
                     absolute_position=(
                         x + self.window_system.focused_window_extents[0],
