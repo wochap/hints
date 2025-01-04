@@ -12,12 +12,17 @@ listening for.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
 from gi import require_foreign, require_version
 
-from hints.mouse import (MouseButtonActions, MouseButtons, MouseMode, click,
-                         do_mouse_action)
+from hints.mouse import (
+    MouseButtonActions,
+    MouseButtons,
+    MouseMode,
+    click,
+    do_mouse_action,
+)
 from hints.utils import HintsConfig
 
 require_version("Gdk", "3.0")
@@ -25,10 +30,6 @@ require_version("Gtk", "3.0")
 require_foreign("cairo")
 
 from gi.repository import Gdk, Gtk
-from pynput.mouse import Button
-
-if TYPE_CHECKING:
-    from pynput.mouse import Controller
 
 
 class InterceptorWindow(Gtk.Window):
