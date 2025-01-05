@@ -32,6 +32,7 @@ class OverlayWindow(Gtk.Window):
         config: HintsConfig,
         hints: dict[str, Child],
         mouse_action: dict[str, Any],
+        is_wayland: bool = False,
     ):
         """Hint overlay constructor.
 
@@ -50,6 +51,7 @@ class OverlayWindow(Gtk.Window):
         self.hints = hints
         self.hint_selector_state = ""
         self.mouse_action = mouse_action
+        self.is_wayland = is_wayland
 
         # hint settings
         hints_config = config["hints"]
@@ -274,7 +276,8 @@ class OverlayWindow(Gtk.Window):
         """
 
         while (
-            Gdk.keyboard_grab(window.get_window(), False, Gdk.CURRENT_TIME)
+            not self.is_wayland
+            and Gdk.keyboard_grab(window.get_window(), False, Gdk.CURRENT_TIME)
             != Gdk.GrabStatus.SUCCESS
         ):
             pass

@@ -38,7 +38,6 @@ setup(
     download_url="https://github.com/AlfredoSequeida/hints/archive/"
     + dynamic_version
     + ".tar.gz",
-    python_requires=">=3.10",
     keywords=[
         "vim",
         "vimium",
@@ -50,7 +49,8 @@ setup(
         "x11",
         "wayland",
     ],
-    platforms="any",
+    python_requires=">=3.10",
+    platforms=["Linux"],
     classifiers=[
         "Intended Audience :: End Users/Desktop",
         "Topic :: Desktop Environment",
@@ -60,8 +60,8 @@ setup(
         "Programming Language :: Python",
     ],
     license="GPLv3",
-    packages=["hints", "hints.backends", "hints.huds"],
+    packages=["hints", "hints.backends", "hints.huds", "hints.window_systems"],
     include_package_data=True,
-    install_requires=["PyGObject", "pynput", "pillow", "opencv-python"],
+    install_requires=["PyGObject", "pillow", "pyscreenshot", "opencv-python"],
     entry_points={"console_scripts": ["hints = hints.hints:main"]},
 )

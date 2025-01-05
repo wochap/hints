@@ -98,4 +98,6 @@ DEFAULT_CONFIG = {
     "exit_key": Gdk.KEY_Escape,
     "hover_modifier": Gdk.ModifierType.CONTROL_MASK,
     "grab_modifier": Gdk.ModifierType.MOD1_MASK,  # Alt
+    "overlay_x_offset": 0,
+    "overlay_y_offset": 0,
 }

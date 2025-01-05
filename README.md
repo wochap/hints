@@ -6,6 +6,7 @@
 </p>
 
 # Click, scroll, and drag with your keyboard
+
 ![demo](https://github.com/user-attachments/assets/838d4043-5e21-4e61-979f-bd8fae7d4d36)
 
 Navigate GUIs without a mouse by typing hints in combination with modifier keys.
@@ -23,8 +24,6 @@ Don't like the keybindings? That's ok, you can change them.
 
 ## System Requirements
 
-Note: Currently hints only works on Linux X11.
-
 1. You will need to have some sort of [compositing](https://wiki.archlinux.org/title/Xorg#Composite) setup so that you can properly overlay hints over windows with the correct level of transparency. Otherwise, the overlay will just cover the entire screen; not allowing you to see what is under the overlay.
 
 2. You will need to enable accessibility for your system. If you use a Desktop Environment, this might already be enabled by default. If you find that hints does not work or works for some apps and not others add the following to `/etc/environment`
@@ -38,21 +37,21 @@ QT_ACCESSIBILITY=1
 QT_LINUX_ACCESSIBILITY_ALWAYS_ON=1
 ```
 
-Note: If you are seeing hints all over the place instead of right on top of elements please read the [backends section in the wiki configuration guide](https://github.com/AlfredoSequeida/hints/wiki/Configuration-guide#backends) to understand why. This might mean that you have not enabled accessibility, there is something else you need to do for the application you are drawing hints for, or that the current application does not support the atspi backend.
-
 3. Install hints:
 
-Below you will find installation instructions for some popular linux distros bases. The setup is as follows:
+Below you will find installation instructions for some popular linux distros. The commands below assume that you're running wayland if your `XDG_SESSION_TYPE` variable is set to `wayland`. If that's the case you will install the wayland dependencies. Otherwise, the x11 dependencies will be installed. The setup is as follows:
 
 - Install the python/system dependencies (including [pipx](https://pipx.pypa.io/stable/installation/)).
 - Setup pipx.
 - Use pipx to install hints.
 
 Ubuntu
+**Note: At the time of writing these docs, the ydotool package available for Ubuntu does not include a service, so if you want to use a service, [install it from source instead](https://github.com/ReimuNotMoe/ydotool/#compile)**
 
 ```
 sudo apt update && \
-    sudo apt install git libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-4.0 pipx && \
+    sudo apt install git ydotool libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-4.0 pipx && \
+    [ $XDG_SESSION_TYPE = "wayland" ] && sudo apt install grim && \
     pipx ensurepath && \
     pipx install git+https://github.com/AlfredoSequeida/hints.git
 ```
@@ -60,7 +59,8 @@ sudo apt update && \
 Fedora
 
 ```
-sudo dnf install git gcc gobject-introspection-devel cairo-gobject-devel pkg-config python3-devel gtk4 pipx && \
+sudo dnf install git ydotool gcc gobject-introspection-devel cairo-gobject-devel pkg-config python3-devel gtk4 pipx && \
+    [ $XDG_SESSION_TYPE = "wayland" ] && sudo dnf install grim && \
     pipx ensurepath && \
     pipx install git+https://github.com/AlfredoSequeida/hints.git
 ```
@@ -69,7 +69,8 @@ Arch
 
 ```
 sudo pacman -Sy && \
-    sudo pacman -S git python cairo pkgconf gobject-introspection gtk4 libwnck3 python-pipx && \
+    sudo pacman -S git ydotool python cairo pkgconf gobject-introspection gtk4 python-pipx && \
+    [ $XDG_SESSION_TYPE = "wayland" ] && sudo pacman -S grim || sudo pacman -S libwnck3 && \
     pipx ensurepath && \
     pipx install git+https://github.com/AlfredoSequeida/hints.git
 ```
@@ -78,23 +79,8 @@ Finally, source your shell config or restart your terminal.
 
 ## Setup
 
-At this point, hints should be installed, you can verify this by running `hints` in your shell. You will want to bind a keyboard shortcut to `hints` so you don't have to keep typing in a command to open it. This will depend on your OS/ window manager / desktop environment.
-
-Here is an example of a binding on i3 by editing `.conf/i3/config`:
-
-```
-bindsym $mod+i exec hints
-```
-
-This will bind <kbd>mod</kbd> + <kbd>i</kbd> to launch hints. To stop showing hints (quit hints), press the <kbd>Esc</kbd> key on your keyboard.
-
-Hints also has a scroll mode to scroll, which can also be bound to a key combination. For example:
-
-```
-bindsym $mod+y exec hints --mode scroll
-```
-
-If you still don't see any hints, the application you're testing could need a bit of extra setup. Please see the [Help,-hints-doesn't-work-with-X-application](https://github.com/AlfredoSequeida/hints/wiki/Help,-hints-doesn't-work-with-X-application) page in the wiki.
+1. Follow the setup instructions for your window system [here](https://github.com/AlfredoSequeida/hints/wiki/Window-Manager-and-Desktop-Environment-Setup-Guide).
+2. At this point, hints should be installed, you can verify this by running `hints` in your shell. If you still don't see any hints, the application you're testing could need a bit of extra setup. Please see the [Help,-hints-doesn't-work-with-X-application](https://github.com/AlfredoSequeida/hints/wiki/Help,-hints-doesn't-work-with-X-application) page in the wiki.
 
 # Documentation
 
@@ -104,7 +90,7 @@ For a guide on configuring and using hints, please see the [Wiki](https://github
 
 The easiest ways to contribute are to:
 
-- [Become a sponsor](https://github.com/sponsors/AlfredoSequeida). Hints is a passion project that I really wanted for myself and I am working on it on my spare time. I chose to make it free and open source so that others can benefit. If you find it valuable, donating is a nice way to say thanks. You can donate any amount you want.
+- [Become a sponsor](https://github.com/sponsors/AlfredoSequeida). Hints is a passion project that I really wanted for myself and I am working on it in my spare time. I chose to make it free and open source so that others can benefit. If you find it valuable, donating is a nice way to say thanks. You can donate any amount you want.
 - Report bugs. If you notice something is not working as expected or have an idea on how to make hints better, [open up an issue](https://github.com/AlfredoSequeida/hints/issues/new). This helps everyone out.
 - If you can code, feel free to commit some code! You can see if any issues need solutions or you can create a new feature. If you do want to create a new feature, it's a good idea to create an issue first so we can align on why this feature is needed and if it has a possibility of being merged.
 
@@ -131,4 +117,4 @@ At this point, hints should be installed locally in the virtual environment, you
 ## Development tips
 
 - If you are making updates that impact hints, you will most likely need to test displaying hints and might find yourself executing hints but not being quick enough to switch to a window to see hints. To get around this, you can execute `hints` with a short pause in your shell: `sleep 0.5; hints`. This way you can have time to switch to a window and see any errors / logs in your shell.
-- If `hints` is consuming all keyboard inputs on Xorg and you're trapped:  switch to a virtual terminal with e.g. `Ctrl+Alt+F2`, login, and run `killall hints`
+- If `hints` is consuming all keyboard inputs and you're trapped: switch to a virtual terminal with e.g. <kbd>CTRL</kbd>+<kbd>ALT</kbd>+<kbd>F2</kbd>, login, and run `killall hints`. You can then exit with `exit` and switch back to the the previous session (most likely 1): <kbd>CTRL</kbd>+<kbd>ALT</kbd>+<kbd>F1</kbd>

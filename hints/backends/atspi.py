@@ -5,6 +5,8 @@ from typing import Literal
 
 from gi import require_version
 
+from hints.window_systems.window_system_type import WindowSystemType
+
 require_version("Atspi", "2.0")
 from gi.repository import Atspi
 
@@ -34,7 +36,7 @@ class AtspiBackend(HintsBackend):
     def get_relative_and_absolute_extents(
         self, root: Atspi.Accessible
     ) -> tuple[tuple[int, int], tuple[int, int], tuple[int, int]]:
-        """Get relative position, absolute position, and extents for accessible
+        """Get absolute position, relative position, and extents for accessible
         element.
 
         Some DE/WMs like gnome don't yield the correct relative postions
@@ -46,10 +48,10 @@ class AtspiBackend(HintsBackend):
         :param root: Accessible element to get extents for.
         :return: absolute_position, relative_position, and extents.
         """
-        start_x, start_y, _, _ = self.window_extents
+        start_x, start_y, _, _ = self.window_system.focused_window_extents
 
-        # GTK4 does not support absolute positioning, so we work off relative positions
-        if (
+        # GTK4 and Wayland do not support absolute positioning, so we work off relative positions
+        if self.window_system.window_system_type == WindowSystemType.WAYLAND or (
             self.toolkit == "GTK"
             and int(str(self.toolkit_version).split(".", maxsplit=1)[0]) >= 4
         ):
@@ -151,7 +153,7 @@ class AtspiBackend(HintsBackend):
     def recursively_get_children_of_interest(
         self,
         root: Atspi.Accessible,
-        children: set,
+        children: list[Child],
     ):
         """This is a fallback gathering method for when Applications do not
         implement the Collections interface.
@@ -177,7 +179,7 @@ class AtspiBackend(HintsBackend):
             if (
                 self.validate_match_conditions(root, "state")
                 and self.validate_match_conditions(root, "role")
-                and self.window_extents
+                and self.window_system.focused_window_extents
             ):
                 logger.debug(
                     "Accessible element matched. Name: %s, ID: %d",
@@ -187,7 +189,7 @@ class AtspiBackend(HintsBackend):
                 logger.debug("role: %s", root.get_role())
                 logger.debug("states: %s", root.get_state_set().get_states())
 
-                children.add(
+                children.append(
                     Child(
                         relative_position=(
                             relative_position[0],
@@ -213,7 +215,7 @@ class AtspiBackend(HintsBackend):
     def get_children_of_interest(
         self,
         root: Atspi.Accessible,
-        children: set,
+        children: list[Child],
     ):
         """Get Atspi Accessible children that match a given set of states
         recursively.
@@ -237,7 +239,7 @@ class AtspiBackend(HintsBackend):
 
         collection = root.get_collection_iface()
 
-        if collection and self.window_extents:
+        if collection and self.window_system.focused_window_extents:
             matches = collection.get_matches(
                 match_rule, Atspi.CollectionSortOrder.CANONICAL, 0, True
             )
@@ -260,7 +262,7 @@ class AtspiBackend(HintsBackend):
                 logger.debug("role: %s", match.get_role())
                 logger.debug("states: %s", match.get_state_set().get_states())
 
-                children.add(
+                children.append(
                     Child(
                         relative_position=(relative_position[0], relative_position[1]),
                         absolute_position=(absolute_position[0], absolute_position[1]),
@@ -300,7 +302,8 @@ class AtspiBackend(HintsBackend):
                 # out such applications.
                 if (
                     current_window.get_state_set().contains(Atspi.StateType.ACTIVE)
-                    and current_window.get_process_id() == self.active_window.get_pid()
+                    and current_window.get_process_id()
+                    == self.window_system.focused_window_pid
                 ):
                     return current_window
 
@@ -314,7 +317,7 @@ class AtspiBackend(HintsBackend):
         :return: The extents of the window containing the children and
             centered children coordinates.
         """
-        children: set[Child] = set()
+        children: list[Child] = []
         window = self.get_atspi_active_window()
 
         if window:
@@ -340,7 +343,7 @@ class AtspiBackend(HintsBackend):
 
             logger.debug(
                 "Finished gathering hints for '%s'. Toolkit: %s v:%s",
-                self.application_name,
+                self.window_system.focused_applicaiton_name,
                 self.toolkit,
                 self.toolkit_version,
             )
