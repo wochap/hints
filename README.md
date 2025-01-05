@@ -39,17 +39,19 @@ QT_LINUX_ACCESSIBILITY_ALWAYS_ON=1
 
 3. Install hints:
 
-Below you will find installation instructions for some popular linux distros bases. The setup is as follows:
+Below you will find installation instructions for some popular linux distros. The commands below assume that you're running wayland if your `XDG_SESSION_TYPE` variable is set to `wayland`. If that's the case you will install the wayland dependencies. Otherwise, the x11 dependencies will be installed. The setup is as follows:
 
 - Install the python/system dependencies (including [pipx](https://pipx.pypa.io/stable/installation/)).
 - Setup pipx.
 - Use pipx to install hints.
 
 Ubuntu
+**Note: At the time of writing these docs, the ydotool package available for Ubuntu does not include a service, so if you want to use a service, [install it from source instead](https://github.com/ReimuNotMoe/ydotool/#compile)**
 
 ```
 sudo apt update && \
     sudo apt install git ydotool libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-4.0 pipx && \
+    [ $XDG_SESSION_TYPE = "wayland" ] && sudo apt install grim && \
     pipx ensurepath && \
     pipx install git+https://github.com/AlfredoSequeida/hints.git
 ```
@@ -58,6 +60,7 @@ Fedora
 
 ```
 sudo dnf install git ydotool gcc gobject-introspection-devel cairo-gobject-devel pkg-config python3-devel gtk4 pipx && \
+    [ $XDG_SESSION_TYPE = "wayland" ] && sudo dnf install grim && \
     pipx ensurepath && \
     pipx install git+https://github.com/AlfredoSequeida/hints.git
 ```
@@ -66,7 +69,8 @@ Arch
 
 ```
 sudo pacman -Sy && \
-    sudo pacman -S git ydotool python cairo pkgconf gobject-introspection gtk4 libwnck3 python-pipx && \
+    sudo pacman -S git ydotool python cairo pkgconf gobject-introspection gtk4 python-pipx && \
+    [ $XDG_SESSION_TYPE = "wayland" ] && sudo pacman -S grim || sudo pacman -S libwnck3 && \
     pipx ensurepath && \
     pipx install git+https://github.com/AlfredoSequeida/hints.git
 ```
@@ -75,78 +79,8 @@ Finally, source your shell config or restart your terminal.
 
 ## Setup
 
-1. Hints uses ydotool for mouse movements to support both wayland and x11. Ydotool has a service that must be started:
-
-NOTE: There is currently an issue when using the drag feature with ydotool (if you are using the drag feature in a file manager you might notice your input becomes locked up. If this happens you will need to quit hints by switching to another [tty session](#development-tips) or restarting your system). This is not a bug with hints, but rather a bug with ydotool as it can be replicated without hints.
-
-enable the service so that it starts on its own with every reboot:
-
-```
-systemctl --user enable ydotool.service
-```
-
-start the service for the current session:
-
-```
-systemctl --user start ydotool.service
-```
-
-2. Window manager specific setups:
-
-### Sway
-
-1. Ydotool won't work as expected if mouse acceleration for the ydotool virtual devices is not disabled.
-
-Find the ydotoold mouse virtual device
-
-```
-> swaymsg -t get_inputs
-...
-Input device: ydotoold virtual device
-  Type: Mouse
-  Identifier: 9011:26214:ydotoold_virtual_device
-  Product ID: 26214
-  Vendor ID: 9011
-  Libinput Send Events: enabled
-...
-```
-
-Add a rule in your sway config file to remove acceleration for this input device using the `Identifier` you found.
-
-```
-input 9011:26214:ydotoold_virtual_device {
-    accel_profile "flat"
-}
-```
-
-reload your sway session.
-
-```
-swaymsg reload
-```
-
-2. Other dependencies:
-
-   - Install [grim](https://sr.ht/~emersion/grim/) so the opencv backend can take screenshots.
-   - Install [jq](https://github.com/jqlang/jq) to parse `swaymsg`.
-
-3. At this point, hints should be installed, you can verify this by running `hints` in your shell. You will want to bind a keyboard shortcut to `hints` so you don't have to keep typing in a command to open it. This will depend on your OS/ window manager / desktop environment.
-
-Here is an example of a binding on i3 by editing `.conf/i3/config`:
-
-```
-bindsym $mod+i exec hints
-```
-
-This will bind <kbd>mod</kbd> + <kbd>i</kbd> to launch hints. To stop showing hints (quit hints), press the <kbd>Esc</kbd> key on your keyboard.
-
-Hints also has a scroll mode to scroll, which can also be bound to a key combination. For example:
-
-```
-bindsym $mod+y exec hints --mode scroll
-```
-
-If you still don't see any hints, the application you're testing could need a bit of extra setup. Please see the [Help,-hints-doesn't-work-with-X-application](https://github.com/AlfredoSequeida/hints/wiki/Help,-hints-doesn't-work-with-X-application) page in the wiki.
+1. Follow the setup instructions for your window system [here](https://github.com/AlfredoSequeida/hints/wiki/Window-Manager-and-Desktop-Environment-Setup-Guide).
+2. At this point, hints should be installed, you can verify this by running `hints` in your shell. If you still don't see any hints, the application you're testing could need a bit of extra setup. Please see the [Help,-hints-doesn't-work-with-X-application](https://github.com/AlfredoSequeida/hints/wiki/Help,-hints-doesn't-work-with-X-application) page in the wiki.
 
 # Documentation
 
