@@ -55,7 +55,7 @@ setup(
         "Intended Audience :: End Users/Desktop",
         "Topic :: Desktop Environment",
         "Topic :: Desktop Environment :: Window Managers",
-        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)"
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
         "Operating System :: POSIX :: Linux",
         "Programming Language :: Python",
     ],
