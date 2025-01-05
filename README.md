@@ -51,7 +51,7 @@ Ubuntu
 ```
 sudo apt update && \
     sudo apt install git ydotool libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-4.0 pipx && \
-    [ $XDG_SESSION_TYPE = "wayland" ] && sudo apt install grim && \
+    [ $XDG_SESSION_TYPE = "wayland" ] && sudo apt install gtk-layer-shell grim && \
     pipx ensurepath && \
     pipx install git+https://github.com/AlfredoSequeida/hints.git
 ```
@@ -60,7 +60,7 @@ Fedora
 
 ```
 sudo dnf install git ydotool gcc gobject-introspection-devel cairo-gobject-devel pkg-config python3-devel gtk4 pipx && \
-    [ $XDG_SESSION_TYPE = "wayland" ] && sudo dnf install grim && \
+    [ $XDG_SESSION_TYPE = "wayland" ] && sudo dnf install gtk-layer-shell grim && \
     pipx ensurepath && \
     pipx install git+https://github.com/AlfredoSequeida/hints.git
 ```
@@ -70,7 +70,7 @@ Arch
 ```
 sudo pacman -Sy && \
     sudo pacman -S git ydotool python cairo pkgconf gobject-introspection gtk4 python-pipx && \
-    [ $XDG_SESSION_TYPE = "wayland" ] && sudo pacman -S grim || sudo pacman -S libwnck3 && \
+    [ $XDG_SESSION_TYPE = "wayland" ] && sudo pacman -S gtk-layer-shell grim || sudo pacman -S libwnck3 && \
     pipx ensurepath && \
     pipx install git+https://github.com/AlfredoSequeida/hints.git
 ```
