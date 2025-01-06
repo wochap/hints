@@ -19,14 +19,12 @@ from hints.mouse import MouseButtonActions, MouseButtons, click
 from hints.utils import HintsConfig, load_config
 from hints.window_systems.exceptions import WindowSystemNotSupported
 from hints.window_systems.window_system import WindowSystem
-from hints.window_systems.window_system_type import (
-    WindowSystemType,
-    get_window_system_type,
-)
+from hints.window_systems.window_system_type import (WindowSystemType,
+                                                     get_window_system_type)
 
 if TYPE_CHECKING:
-    from hints.window_systems.window_system import WindowSystem
     from hints.child import Child
+    from hints.window_systems.window_system import WindowSystem
 
 
 logger = logging.getLogger(__name__)
@@ -251,7 +249,7 @@ def get_window_system() -> Type[WindowSystem]:
     window_system_type = get_window_system_type()
 
     # add new waland wms here, then add a match case below to import the class
-    supported_wayland_wms = {"sway"}
+    supported_wayland_wms = {"sway", "Hyprland"}
 
     window_system: Type[WindowSystem] | None = None
 
@@ -262,8 +260,8 @@ def get_window_system() -> Type[WindowSystem]:
         # Check if there is a process running that matches the supported_wayland_wms
         wayland_wm = (
             run(
-                "ps -e | grep -m 1 -o -F "
-                + " ".join([f"-e {wm}" for wm in supported_wayland_wms]),
+                "ps -e -o command | grep -m 1 -o -E "
+                + " ".join([f"-e '^{wm}$'" for wm in supported_wayland_wms]),
                 capture_output=True,
                 shell=True,
             )
@@ -274,6 +272,9 @@ def get_window_system() -> Type[WindowSystem]:
         match wayland_wm:
             case "sway":
                 from hints.window_systems.sway import Sway as window_system
+            case "Hyprland":
+                from hints.window_systems.hyprland import \
+                    Hyprland as window_system
 
     if not window_system:
         # adding x11 for an acurate report of the supported window systems
@@ -335,5 +336,9 @@ def main():
                 1,
                 1,
                 gkt_window_args=({"action": "scroll"},),
-                gtk_window_kwargs={"config": config},
+                gtk_window_kwargs={
+                    "config": config,
+                    "is_wayland": window_system.window_system_type
+                    == WindowSystemType.WAYLAND,
+                },
             )
