@@ -46,6 +46,7 @@ Below you will find installation instructions for some popular linux distros. Th
 - Use pipx to install hints.
 
 Ubuntu
+
 **Note: At the time of writing these docs, the ydotool package available for Ubuntu does not include a service, so if you want to use a service, [install it from source instead](https://github.com/ReimuNotMoe/ydotool/#compile)**
 
 ```
