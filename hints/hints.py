@@ -19,14 +19,12 @@ from hints.mouse import MouseButtonActions, MouseButtons, click
 from hints.utils import HintsConfig, load_config
 from hints.window_systems.exceptions import WindowSystemNotSupported
 from hints.window_systems.window_system import WindowSystem
-from hints.window_systems.window_system_type import (
-    WindowSystemType,
-    get_window_system_type,
-)
+from hints.window_systems.window_system_type import (WindowSystemType,
+                                                     get_window_system_type)
 
 if TYPE_CHECKING:
-    from hints.window_systems.window_system import WindowSystem
     from hints.child import Child
+    from hints.window_systems.window_system import WindowSystem
 
 
 logger = logging.getLogger(__name__)
@@ -236,7 +234,11 @@ def hint_mode(config: HintsConfig, window_system: WindowSystem):
                             1,
                             1,
                             gkt_window_args=({"action": "grab"},),
-                            gtk_window_kwargs={"config": config},
+                            gtk_window_kwargs={
+                                "config": config,
+                                "is_wayland": window_system.window_system_type
+                                == WindowSystemType.WAYLAND,
+                            },
                         )
 
             # no need to use the next backend if the current one succeeded
@@ -335,5 +337,9 @@ def main():
                 1,
                 1,
                 gkt_window_args=({"action": "scroll"},),
-                gtk_window_kwargs={"config": config},
+                gtk_window_kwargs={
+                    "config": config,
+                    "is_wayland": window_system.window_system_type
+                    == WindowSystemType.WAYLAND,
+                },
             )
