@@ -260,7 +260,7 @@ def get_window_system() -> Type[WindowSystem]:
         # Check if there is a process running that matches the supported_wayland_wms
         wayland_wm = (
             run(
-                "ps -e -o command | grep -m 1 -o -E "
+                "ps -e -o comm | grep -m 1 -o -E "
                 + " ".join([f"-e '^{wm}$'" for wm in supported_wayland_wms]),
                 capture_output=True,
                 shell=True,
