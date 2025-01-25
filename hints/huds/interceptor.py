@@ -16,13 +16,8 @@ from typing import Any
 
 from gi import require_foreign, require_version
 
-from hints.mouse import (
-    MouseButtonActions,
-    MouseButtons,
-    MouseMode,
-    click,
-    do_mouse_action,
-)
+from hints.mouse import (MouseButtonActions, MouseButtons, MouseMode, click,
+                         do_mouse_action, move)
 from hints.utils import HintsConfig
 
 require_version("Gdk", "3.0")
@@ -62,6 +57,7 @@ class InterceptorWindow(Gtk.Window):
         self.config = config
         self.key_press_state: dict[str, Any] = {}
         self.is_wayland = is_wayland
+        self.first_move = True
 
         # composite setup
         screen = self.get_screen()
@@ -102,6 +98,14 @@ class InterceptorWindow(Gtk.Window):
         if keyval_lower == self.config["exit_key"]:
             click(0, 0, MouseButtons.LEFT, (MouseButtonActions.UP,), absolute=False)
             Gtk.main_quit()
+
+        if self.first_move:
+            # Some window system like Hyprland require mouse movemovement to
+            # focus the window being interacted with. So we do a very small move to
+            # refocus the window
+            move(0, 1, absolute=False)
+            move(0, -1, absolute=False)
+            self.first_move = False
 
         if keyval_lower:
             match self.mouse_action["action"]:

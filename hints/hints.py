@@ -253,7 +253,7 @@ def get_window_system() -> Type[WindowSystem]:
     window_system_type = get_window_system_type()
 
     # add new waland wms here, then add a match case below to import the class
-    supported_wayland_wms = {"sway"}
+    supported_wayland_wms = {"sway", "Hyprland"}
 
     window_system: Type[WindowSystem] | None = None
 
@@ -264,8 +264,8 @@ def get_window_system() -> Type[WindowSystem]:
         # Check if there is a process running that matches the supported_wayland_wms
         wayland_wm = (
             run(
-                "ps -e | grep -m 1 -o -F "
-                + " ".join([f"-e {wm}" for wm in supported_wayland_wms]),
+                "ps -e -o comm | grep -m 1 -o -E "
+                + " ".join([f"-e '^{wm}$'" for wm in supported_wayland_wms]),
                 capture_output=True,
                 shell=True,
             )
@@ -276,6 +276,9 @@ def get_window_system() -> Type[WindowSystem]:
         match wayland_wm:
             case "sway":
                 from hints.window_systems.sway import Sway as window_system
+            case "Hyprland":
+                from hints.window_systems.hyprland import \
+                    Hyprland as window_system
 
     if not window_system:
         # adding x11 for an acurate report of the supported window systems
