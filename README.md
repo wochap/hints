@@ -15,6 +15,7 @@ Navigate GUIs without a mouse by typing hints in combination with modifier keys.
 - click multiple times (<kbd>2</kbd><kbd>j</kbd><kbd>k</kbd>)
 - right click (<kbd>SHIFT</kbd> + <kbd>j</kbd><kbd>k</kbd>)
 - drag (<kbd>ALT</kbd> + <kbd>j</kbd><kbd>k</kbd>)
+ - Note for wayland users: Due to how different wayland compositors handle overlay windows, dragging might not always work for your compositor.
 - hover (<kbd>CTRL</kbd> + <kbd>j</kbd><kbd>k</kbd>)
 - scroll/move the mouse using vim key bindings (<kbd>h</kbd>,<kbd>j</kbd>,<kbd>k</kbd>,<kbd>l</kbd>)
 
