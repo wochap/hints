@@ -20,9 +20,11 @@ from hints.mouse_enums import MouseButton, MouseButtonState
 from hints.utils import HintsConfig, load_config
 from hints.window_systems.exceptions import WindowSystemNotSupported
 from hints.window_systems.window_system import WindowSystem
-from hints.window_systems.window_system_type import (SupportedWindowSystems,
-                                                     WindowSystemType,
-                                                     get_window_system_type)
+from hints.window_systems.window_system_type import (
+    SupportedWindowSystems,
+    WindowSystemType,
+    get_window_system_type,
+)
 
 if TYPE_CHECKING:
     from hints.child import Child
@@ -267,6 +269,8 @@ def get_window_system_class(
             from hints.window_systems.sway import Sway as window_system
         case "hyprland":
             from hints.window_systems.hyprland import Hyprland as window_system
+        case "plasmashell":
+            from hints.window_systems.plasmashell import Plasmashell as window_system
 
     return window_system
 
@@ -288,7 +292,7 @@ def get_window_system(window_system_id: str = "") -> Type[WindowSystem]:
         if window_system_type == WindowSystemType.WAYLAND:
 
             # add new waland wms here, then add a match case below to import the class
-            supported_wayland_wms = {"sway", "Hyprland"}
+            supported_wayland_wms = {"sway", "Hyprland", "plasmashell"}
 
             # Check if there is a process running that matches the supported_wayland_wms
             window_system_id = (
