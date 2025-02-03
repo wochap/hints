@@ -5,6 +5,8 @@
   </a>
 </p>
 
+[Watch a video on how Hints works](https://youtu.be/b-NrnemxpBk)
+
 # Click, scroll, and drag with your keyboard
 
 ![demo](https://github.com/user-attachments/assets/838d4043-5e21-4e61-979f-bd8fae7d4d36)
