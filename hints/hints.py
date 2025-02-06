@@ -35,7 +35,7 @@ require_version("Gdk", "3.0")
 from gi.repository import Gdk, Gtk
 
 
-def display_gkt_window(
+def display_gtk_window(
     window_system: WindowSystem,
     gtk_window: Gtk.Window,
     x: int,
@@ -171,7 +171,7 @@ def hint_mode(config: HintsConfig, window_system: WindowSystem):
             mouse_action: dict[str, Any] = {}
             x, y, width, height = window_extents
 
-            display_gkt_window(
+            display_gtk_window(
                 window_system,
                 OverlayWindow,
                 x,
@@ -226,7 +226,7 @@ def hint_mode(config: HintsConfig, window_system: WindowSystem):
                             (MouseButtonActions.DOWN,),
                         )
 
-                        display_gkt_window(
+                        display_gtk_window(
                             window_system,
                             InterceptorWindow,
                             x,
@@ -332,7 +332,7 @@ def main():
         case "hint":
             hint_mode(config, window_system)
         case "scroll":
-            display_gkt_window(
+            display_gtk_window(
                 window_system,
                 InterceptorWindow,
                 0,
