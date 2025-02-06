@@ -83,7 +83,7 @@ def display_gtk_window(
 
         # On sway (unknow about other wayland compositors as of now), the
         # compositor cannot be relied on to put a window on the correct monitor,
-        # so we as setting the monitor and treating the window as relative to
+        # so we are setting the monitor and treating the window as relative to
         # that monitor to position hints.
         expected_monitor = Gdk.Display.get_monitor_at_point(
             Gdk.Display.get_default(), window_x_pos, window_y_pos
@@ -101,6 +101,7 @@ def display_gtk_window(
         GtkLayerShell.set_anchor(window, GtkLayerShell.Edge.LEFT, True)
         GtkLayerShell.set_layer(window, GtkLayerShell.Layer.OVERLAY)
         GtkLayerShell.set_keyboard_mode(window, GtkLayerShell.KeyboardMode.EXCLUSIVE)
+        GtkLayerShell.set_namespace(window, "Hints") # Allows for compositor layer rules
 
     window.show_all()
     Gtk.main()
