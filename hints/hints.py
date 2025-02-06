@@ -101,7 +101,7 @@ def display_gtk_window(
         GtkLayerShell.set_anchor(window, GtkLayerShell.Edge.LEFT, True)
         GtkLayerShell.set_layer(window, GtkLayerShell.Layer.OVERLAY)
         GtkLayerShell.set_keyboard_mode(window, GtkLayerShell.KeyboardMode.EXCLUSIVE)
-        GtkLayerShell.set_namespace(window, "Hints") # Allows for compositor layer rules
+        GtkLayerShell.set_namespace(window, "hints") # Allows for compositor layer rules
 
     window.show_all()
     Gtk.main()
