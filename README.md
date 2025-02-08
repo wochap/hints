@@ -1,10 +1,10 @@
 <p align="center">
   <img src="https://github.com/user-attachments/assets/bca7fb8e-a4ad-435b-aa40-c26dbb017239" alt="hints" />
-</p>
 
-[Watch a video on how Hints works](https://youtu.be/b-NrnemxpBk)
+  <a href="https://youtu.be/b-NrnemxpBk" target="_blank">
+    <img src="https://github.com/user-attachments/assets/e5b90967-8f95-4907-b6b6-2babad9b74f7" alt="I made Vimium for the Linux desktop | Use Linux without a mouse"/>
+  </a>
 
-<p align="center">
   <a href="https://www.keytilt.xyz" target="_blank">
     <img src="https://github.com/user-attachments/assets/b44f8021-7f1f-4a60-9be4-561662266e96" alt="keytilt"/>
   </a>
