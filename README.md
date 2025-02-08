@@ -2,7 +2,7 @@
   <img src="https://github.com/user-attachments/assets/bca7fb8e-a4ad-435b-aa40-c26dbb017239" alt="hints" />
 
   <a href="https://youtu.be/b-NrnemxpBk" target="_blank">
-    <img src="https://github.com/user-attachments/assets/e5b90967-8f95-4907-b6b6-2babad9b74f7" alt="I made Vimium for the Linux desktop | Use Linux without a mouse"/>
+    <img src="https://github.com/user-attachments/assets/e5b90967-8f95-4907-b6b6-2babad9b74f7" alt="I made Vimium for the Linux desktop | Use Linux without a mouse" width="80%"/>
   </a>
 
   <a href="https://www.keytilt.xyz" target="_blank">
