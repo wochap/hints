@@ -35,7 +35,7 @@ require_version("Gdk", "3.0")
 from gi.repository import Gdk, Gtk
 
 
-def display_gkt_window(
+def display_gtk_window(
     window_system: WindowSystem,
     gtk_window: Gtk.Window,
     x: int,
@@ -83,7 +83,7 @@ def display_gkt_window(
 
         # On sway (unknow about other wayland compositors as of now), the
         # compositor cannot be relied on to put a window on the correct monitor,
-        # so we as setting the monitor and treating the window as relative to
+        # so we are setting the monitor and treating the window as relative to
         # that monitor to position hints.
         expected_monitor = Gdk.Display.get_monitor_at_point(
             Gdk.Display.get_default(), window_x_pos, window_y_pos
@@ -101,6 +101,7 @@ def display_gkt_window(
         GtkLayerShell.set_anchor(window, GtkLayerShell.Edge.LEFT, True)
         GtkLayerShell.set_layer(window, GtkLayerShell.Layer.OVERLAY)
         GtkLayerShell.set_keyboard_mode(window, GtkLayerShell.KeyboardMode.EXCLUSIVE)
+        GtkLayerShell.set_namespace(window, "hints") # Allows for compositor layer rules
 
     window.show_all()
     Gtk.main()
@@ -171,7 +172,7 @@ def hint_mode(config: HintsConfig, window_system: WindowSystem):
             mouse_action: dict[str, Any] = {}
             x, y, width, height = window_extents
 
-            display_gkt_window(
+            display_gtk_window(
                 window_system,
                 OverlayWindow,
                 x,
@@ -226,7 +227,7 @@ def hint_mode(config: HintsConfig, window_system: WindowSystem):
                             (MouseButtonActions.DOWN,),
                         )
 
-                        display_gkt_window(
+                        display_gtk_window(
                             window_system,
                             InterceptorWindow,
                             x,
@@ -332,7 +333,7 @@ def main():
         case "hint":
             hint_mode(config, window_system)
         case "scroll":
-            display_gkt_window(
+            display_gtk_window(
                 window_system,
                 InterceptorWindow,
                 0,
