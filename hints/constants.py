@@ -76,8 +76,11 @@ DEFAULT_CONFIG = {
             "application_rules": {
                 "default": {
                     "invert_screenshot_colors": False,
+                    "kernel_size": 3,
+                    "canny_min_val": 100,
+                    "canny_max_val": 200,
                 }
-            }
+            },
         },
     },
     "alphabet": "asdfgqwertzxcvbhjklyuiopnm",

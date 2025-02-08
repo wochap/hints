@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 import cv2
 import numpy
 import pyscreenshot as ImageGrab
+from numpy import float32, ones, uint8
 from PIL import ImageChops
 
 from hints.backends.backend import HintsBackend
@@ -79,11 +80,20 @@ class OpenCV(HintsBackend):
             cv2.COLOR_BGR2GRAY,
         )
 
-        _, thresh = cv2.threshold(
-            gray_image, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU
+        edges = cv2.Canny(
+            gray_image,
+            application_rules["canny_min_val"],
+            application_rules["canny_max_val"],
         )
+
+        kernel = ones(
+            (application_rules["kernel_size"], application_rules["kernel_size"]), uint8
+        )
+
+        dilated_edges = cv2.dilate(edges, kernel)
+
         contours, _ = cv2.findContours(
-            thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
+            dilated_edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
         )
 
         for contour in contours:

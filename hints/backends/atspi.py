@@ -311,7 +311,7 @@ class AtspiBackend(HintsBackend):
 
     def get_children(
         self,
-    ) -> set[Child]:
+    ) -> list[Child]:
         """Get coordinates of children.
 
         :return: The extents of the window containing the children and
