@@ -3,11 +3,10 @@ from __future__ import annotations
 import logging
 from typing import TYPE_CHECKING
 
-import cv2
-import numpy
 import pyscreenshot as ImageGrab
-from numpy import float32, ones, uint8
-from PIL import ImageChops
+from cv2 import (CHAIN_APPROX_SIMPLE, COLOR_BGR2GRAY, RETR_LIST, Canny,
+                 boundingRect, cvtColor, dilate, findContours)
+from numpy import array, ones, uint8
 
 from hints.backends.backend import HintsBackend
 from hints.backends.exceptions import AccessibleChildrenNotFoundError
@@ -30,7 +29,6 @@ class OpenCV(HintsBackend):
         self,
         window_extents: tuple[int, int, int, int],
         window_extents_offsets: tuple[int, int, int, int] = (0, 0, 0, 0),
-        invert: bool = False,
     ) -> Image:
         """Take a screenshot of a window specified by its extents.
 
@@ -38,12 +36,10 @@ class OpenCV(HintsBackend):
             (x,y,width,height).
         :param window_extents_offsets: Any offsets for the screenshot
             area (window) (x,y,width,height).
-        :param invert: Invert the image colors. This exists because
-            image recognition yields better results with dark themes.
         :return: Screeshot image.
         """
         x, y, w, h = window_extents
-        im = ImageGrab.grab(
+        return ImageGrab.grab(
             (
                 x + window_extents_offsets[0],
                 y + window_extents_offsets[1],
@@ -51,9 +47,6 @@ class OpenCV(HintsBackend):
                 y + h + window_extents_offsets[3],
             )
         )
-        if invert:
-            im = ImageChops.invert(im)
-        return im
 
     def get_children(self) -> list[Child]:
         """Get children.
@@ -69,18 +62,17 @@ class OpenCV(HintsBackend):
                 # in sway, we need to exclude the top bar from the screenshot region
                 window_extents_offsets = (0, self.window_system.bar_height, 0, 0)
 
-        gray_image = cv2.cvtColor(
-            numpy.array(
+        gray_image = cvtColor(
+            array(
                 self.screenshot(
                     self.window_system.focused_window_extents,
                     window_extents_offsets=window_extents_offsets,
-                    invert=application_rules["invert_screenshot_colors"],
                 )
             ),
-            cv2.COLOR_BGR2GRAY,
+            COLOR_BGR2GRAY,
         )
 
-        edges = cv2.Canny(
+        edges = Canny(
             gray_image,
             application_rules["canny_min_val"],
             application_rules["canny_max_val"],
@@ -90,14 +82,12 @@ class OpenCV(HintsBackend):
             (application_rules["kernel_size"], application_rules["kernel_size"]), uint8
         )
 
-        dilated_edges = cv2.dilate(edges, kernel)
+        dilated_edges = dilate(edges, kernel)
 
-        contours, _ = cv2.findContours(
-            dilated_edges, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE
-        )
+        contours, _ = findContours(dilated_edges, RETR_LIST, CHAIN_APPROX_SIMPLE)
 
         for contour in contours:
-            x, y, w, h = cv2.boundingRect(contour)
+            x, y, w, h = boundingRect(contour)
             children.append(
                 Child(
                     absolute_position=(
