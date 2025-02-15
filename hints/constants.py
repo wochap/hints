@@ -103,4 +103,5 @@ DEFAULT_CONFIG = {
     "grab_modifier": Gdk.ModifierType.MOD1_MASK,  # Alt
     "overlay_x_offset": 0,
     "overlay_y_offset": 0,
+    "window_system": "",
 }
