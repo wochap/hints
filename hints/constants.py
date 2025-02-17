@@ -10,6 +10,7 @@ from gi.repository import Atspi, Gdk
 
 CONFIG_PATH = path.join(path.expanduser("~"), ".config/hints/config.json")
 MOUSE_GRAB_PAUSE = 0.2
+SOCK_FILE = "/tmp/hints.socket"
 DEFAULT_CONFIG = {
     "hints": {
         "hint_height": 30,

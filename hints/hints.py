@@ -15,7 +15,8 @@ from hints.backends.exceptions import AccessibleChildrenNotFoundError
 from hints.backends.opencv import OpenCV
 from hints.huds.interceptor import InterceptorWindow
 from hints.huds.overlay import OverlayWindow
-from hints.mouse import MouseButtonActions, MouseButtons, click
+from hints.mouse import click
+from hints.mouse_enums import MouseButton, MouseButtonState
 from hints.utils import HintsConfig, load_config
 from hints.window_systems.exceptions import WindowSystemNotSupported
 from hints.window_systems.window_system import WindowSystem
@@ -101,7 +102,9 @@ def display_gtk_window(
         GtkLayerShell.set_anchor(window, GtkLayerShell.Edge.LEFT, True)
         GtkLayerShell.set_layer(window, GtkLayerShell.Layer.OVERLAY)
         GtkLayerShell.set_keyboard_mode(window, GtkLayerShell.KeyboardMode.EXCLUSIVE)
-        GtkLayerShell.set_namespace(window, "hints") # Allows for compositor layer rules
+        GtkLayerShell.set_namespace(
+            window, "hints"
+        )  # Allows for compositor layer rules
 
     window.show_all()
     Gtk.main()
@@ -134,6 +137,7 @@ def hint_mode(config: HintsConfig, window_system: WindowSystem):
 
     :param config: Hints config.
     :param window_system: Window System for the session.
+    :param mouse: Mouse device for mouse actions.
     """
     window_extents = None
     hints = {}
@@ -179,10 +183,12 @@ def hint_mode(config: HintsConfig, window_system: WindowSystem):
                 y,
                 width,
                 height,
+                gkt_window_args=(
+                    config,
+                    hints,
+                    mouse_action,
+                ),
                 gtk_window_kwargs={
-                    "config": config,
-                    "hints": hints,
-                    "mouse_action": mouse_action,
                     "is_wayland": window_system.window_system_type
                     == WindowSystemType.WAYLAND,
                 },
@@ -204,27 +210,23 @@ def hint_mode(config: HintsConfig, window_system: WindowSystem):
                         click(
                             mouse_action["x"] + mouse_x_offset,
                             mouse_action["y"] + mouse_y_offset,
-                            (
-                                MouseButtons.LEFT
-                                if mouse_action["button"] == "left"
-                                else MouseButtons.RIGHT
-                            ),
-                            (MouseButtonActions.DOWN, MouseButtonActions.UP),
+                            mouse_action["button"],
+                            (MouseButtonState.DOWN, MouseButtonState.UP),
                             mouse_action["repeat"],
                         )
                     case "hover":
                         click(
                             mouse_action["x"] + mouse_x_offset,
                             mouse_action["y"] + mouse_y_offset,
-                            MouseButtons.LEFT,
+                            MouseButton.LEFT,
                             (),
                         )
                     case "grab":
                         click(
                             mouse_action["x"] + mouse_x_offset,
                             mouse_action["y"] + mouse_y_offset,
-                            MouseButtons.LEFT,
-                            (MouseButtonActions.DOWN,),
+                            MouseButton.LEFT,
+                            (MouseButtonState.DOWN,),
                         )
 
                         display_gtk_window(
@@ -234,9 +236,8 @@ def hint_mode(config: HintsConfig, window_system: WindowSystem):
                             y,
                             1,
                             1,
-                            gkt_window_args=({"action": "grab"},),
+                            gkt_window_args=({"action": "grab"}, config),
                             gtk_window_kwargs={
-                                "config": config,
                                 "is_wayland": window_system.window_system_type
                                 == WindowSystemType.WAYLAND,
                             },
@@ -340,9 +341,8 @@ def main():
                 0,
                 1,
                 1,
-                gkt_window_args=({"action": "scroll"},),
+                gkt_window_args=({"action": "scroll"}, config),
                 gtk_window_kwargs={
-                    "config": config,
                     "is_wayland": window_system.window_system_type
                     == WindowSystemType.WAYLAND,
                 },

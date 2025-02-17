@@ -1,71 +1,107 @@
-"""Mouse handling functions."""
+"""Mouse functions.
+
+This module is a skeleton and does not contain any of the mouse logic.
+The mouse logic lives in mouse_service.py. This module communicates with
+the hints-mouse service via a Unix Domain Socket for Interprocess
+Communication.
+"""
 
 from __future__ import annotations
 
-from enum import Enum
-from subprocess import run
-from time import time
-from typing import Any, Iterable
+from multiprocessing.connection import Client
+from typing import TYPE_CHECKING, Any
 
-from hints.utils import HintsConfig
+from hints.constants import SOCK_FILE
 
 KEY_PRESS_STATE: dict[str, Any] = {}
 
-
-class MouseMode(Enum):
-    """Mouse modes."""
-
-    MOVE = 1
-    SCROLL = 2
+if TYPE_CHECKING:
+    from hints.mouse_enums import MouseButton, MouseButtonState, MouseMode
 
 
-class MouseButtons(Enum):
-    """Ydotool Mouse buttons bit mask codes."""
+class CouldNotCommunicateWithTheMouseService(Exception):
+    """Exception to raise when the mouse service could not be reached."""
 
-    LEFT = 0x00
-    RIGHT = 0x01
-    MIDDLE = 0x02
-    SIDE = 0x03
-    EXTR = 0x04
-    FORWARD = 0x05
-    BACK = 0x06
-    TASK = 0x07
+    def __str__(self):
+        return "Could not communicate with the hints-mouse service. Is it running?"
 
 
-class MouseButtonActions(Enum):
-    """Ydotool Mouse actions bit mask codes."""
+def send_message(method: str, *args, **kwargs):
+    """Send message to hint-mouse service.
 
-    DOWN = 0x40
-    UP = 0x80
+    :param method: The name of the method to call.
+    :param args: args for the method.
+    :param kwargs: kwargs for the method.
+    :raises CouldNotCommunicateWithTheMouseService: When the sock file
+        does not exist (the mouse service creates this file).
+    """
+    try:
+        with Client(SOCK_FILE) as conn:
+            conn.send(
+                {
+                    "method": method,
+                    "args": args,
+                    "kwargs": kwargs,
+                }
+            )
+    except FileNotFoundError as exc:
+        raise CouldNotCommunicateWithTheMouseService() from exc
 
 
-def scroll(x: int | str, y: int | str, *_args, **_kwargs):
-    """Scroll Mouse using ydotool.
+def scroll(x: int, y: int, *_args, **_kwargs):
+    """Scroll event.
 
     :param x: X scroll direction.
     :param y: Y scroll direction. :param *_args: Extra args to use the
         same interface as move. :param **_kwargs: Extra kwargs to use
         the same interface as move.
     """
-    run(["ydotool", "mousemove", "--wheel", "--", str(x), str(y)], check=True)
+    send_message("scroll", x, y, *_args, **_kwargs)
 
 
-def move(x: int | str, y: int | str, absolute: bool = True):
-    """Move mouse using ydotool.
+def move(x: int, y: int, absolute: bool = True):
+    """Move event.
 
     :param X: X move direction.
     :param y: Y move direction.
     :param absolute: Whether to move the mouse using an absolute
         position.
     """
-    move_cmd = ["ydotool", "mousemove"]
-    move_cmd += ["--absolute"] if absolute else []
-    run(move_cmd + ["--", str(x), str(y)], check=True)
+
+    send_message("move", x, y, absolute=absolute)
+
+
+def click(
+    x: int,
+    y: int,
+    button: MouseButton,
+    button_states: Iterable[MouseButtonState],
+    repeat: int = 1,
+    absolute: bool = True,
+):
+    """Click event.
+
+    :param x: X position to click.
+    :param y: Y position to click.
+    :param button: Button to use for click.
+    :param actions: Actions to use for the click button (button down /
+        button up).
+    :param repeat: Times to repeat a click.
+    :param absolute: Whether the click position is absolute.
+    """
+    send_message(
+        "click",
+        x,
+        y,
+        button.value,
+        [button_state.value for button_state in button_states],
+        repeat=repeat,
+        absolute=absolute,
+    )
 
 
 def do_mouse_action(
     key_press_state: dict[str, Any],
-    config: HintsConfig,
     key: str,
     mode: MouseMode,
 ):
@@ -73,87 +109,7 @@ def do_mouse_action(
 
     :param key_press_state: State containing key press event data used
         for ramping up speeds.
-    :param config: Hints config.
     :param key: The key to perform a mouse action for.
     :param mode: The mouse mode.
     """
-    key_press_state.setdefault("start_time", time())
-
-    sensitivity = 1
-    rampup_time = 1
-    mouse_navigation_action = move
-    left = "h"
-    right = "l"
-    up = "k"
-    down = "j"
-
-    if mode == MouseMode.MOVE:
-        sensitivity = config["mouse_move_pixel_sensitivity"]
-        rampup_time = config["mouse_move_rampup_time"]
-        left = config["mouse_move_left"]
-        right = config["mouse_move_right"]
-
-        # up and down are intentionally switched to keep the logic the same
-        # as scrol
-        up = config["mouse_move_down"]
-        down = config["mouse_move_up"]
-
-        mouse_navigation_action = move
-
-    elif mode == MouseMode.SCROLL:
-        sensitivity = config["mouse_scroll_pixel_sensitivity"]
-        rampup_time = config["mouse_scroll_rampup_time"]
-        left = config["mouse_scroll_left"]
-        right = config["mouse_scroll_right"]
-        up = config["mouse_scroll_up"]
-        down = config["mouse_scroll_down"]
-        mouse_navigation_action = scroll
-
-    key_press_state.setdefault("sensitivity", sensitivity)
-
-    if time() - key_press_state["start_time"] >= rampup_time:
-        key_press_state["sensitivity"] += sensitivity
-
-    if key == left:
-        mouse_navigation_action(-key_press_state["sensitivity"], 0, absolute=False)
-    if key == right:
-        mouse_navigation_action(key_press_state["sensitivity"], 0, absolute=False)
-    if key == up:
-        mouse_navigation_action(0, key_press_state["sensitivity"], absolute=False)
-    if key == down:
-        mouse_navigation_action(0, -key_press_state["sensitivity"], absolute=False)
-
-
-def click(
-    x: int | str,
-    y: int | str,
-    button: MouseButtons,
-    actions: Iterable[MouseButtonActions],
-    repeat: int | str = 1,
-    absolute: bool = True,
-):
-    """Click using ydotool.
-
-    :param x: X position to click.
-    :param y: Y position to click.
-    :param button: Button to use for click.
-    :param actions: Actions to use for the click button.
-    :param repeat: Times to repeat a click.
-    :param absolute: Whether the click position is absolute.
-    """
-    move(x, y, absolute=absolute)
-
-    button_mask = button.value
-    for action in actions:
-        button_mask |= action.value
-
-    run(
-        [
-            "ydotool",
-            "click",
-            str(hex(button_mask)),
-            "--repeat",
-            str(repeat),
-        ],
-        check=True,
-    )
+    send_message("do_mouse_action", key_press_state, key, mode.value)
