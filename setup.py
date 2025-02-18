@@ -53,7 +53,7 @@ class PostInstallCommand(install):
                 capture_output=True,
             )
             bin_dir = pipx_bin_dir_cmd.stdout.decode("utf-8").strip()
-        except FileNotFoundError:
+        except:  # pylint: disable=bare-except
             bin_dir = getenv("HINTS_EXPECTED_BIN_DIR", "")
 
         if not bin_dir:
