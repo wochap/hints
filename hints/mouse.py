@@ -26,12 +26,13 @@ class CouldNotCommunicateWithTheMouseService(Exception):
         return "Could not communicate with the hints-mouse service. Is it running?"
 
 
-def send_message(method: str, *args, **kwargs):
+def send_message(method: str, *args, **kwargs) -> Any:
     """Send message to hint-mouse service.
 
     :param method: The name of the method to call.
     :param args: args for the method.
     :param kwargs: kwargs for the method.
+    :param return: The payload sent back from the mouse service.
     :raises CouldNotCommunicateWithTheMouseService: When the sock file
         does not exist (the mouse service creates this file).
     """
@@ -44,6 +45,7 @@ def send_message(method: str, *args, **kwargs):
                     "kwargs": kwargs,
                 }
             )
+            return conn.recv()
     except FileNotFoundError as exc:
         raise CouldNotCommunicateWithTheMouseService() from exc
 
@@ -112,4 +114,4 @@ def do_mouse_action(
     :param key: The key to perform a mouse action for.
     :param mode: The mouse mode.
     """
-    send_message("do_mouse_action", key_press_state, key, mode.value)
+    return send_message("do_mouse_action", key_press_state, key, mode.value)

@@ -96,7 +96,6 @@ class InterceptorWindow(Gtk.Window):
         keyval_lower = Gdk.keyval_to_lower(keyval)
 
         if keyval_lower == self.config["exit_key"]:
-            click(0, 0, MouseButton.LEFT, (MouseButtonState.UP,), absolute=False)
             Gtk.main_quit()
 
         if self.first_move:
@@ -110,13 +109,13 @@ class InterceptorWindow(Gtk.Window):
         if keyval_lower:
             match self.mouse_action["action"]:
                 case "grab":
-                    do_mouse_action(
+                    self.key_press_state = do_mouse_action(
                         self.key_press_state,
                         chr(keyval_lower),
                         MouseMode.MOVE,
                     )
                 case "scroll":
-                    do_mouse_action(
+                    self.key_press_state = do_mouse_action(
                         self.key_press_state,
                         chr(keyval_lower),
                         MouseMode.SCROLL,

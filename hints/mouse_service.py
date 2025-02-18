@@ -212,6 +212,8 @@ class Mouse:
         if key == down:
             mouse_navigation_action(0, -key_press_state["sensitivity"], absolute=False)
 
+        return key_press_state
+
 
 def main():
     """Mouse service entry point."""
@@ -229,16 +231,14 @@ def main():
                 method = payload.get("method", "")
                 args = payload.get("args", ())
                 kwargs = payload.get("kwargs", {})
-
-                match (method):
-                    case "click":
-                        mouse.click(*args, **kwargs)
-                    case "move":
-                        mouse.move(*args, **kwargs)
-                    case "scroll":
-                        mouse.scroll(*args, **kwargs)
-                    case "do_mouse_action":
-                        mouse.do_mouse_action(*args, **kwargs)
+                conn.send(
+                    {
+                        "click": mouse.click,
+                        "move": mouse.move,
+                        "scoll": mouse.scroll,
+                        "do_mouse_action": mouse.do_mouse_action,
+                    }[method](*args, **kwargs)
+                )
 
 
 if __name__ == "__main__":
