@@ -30,7 +30,7 @@ class WindowSystemNotSupported(Exception):
         """String representation of exception."""
         return (
             "This window system is not supported, hints only supports one of: "
-            f" {", ".join(self.supported_wms)}. If you do have one of the"
+            f" {', '.join(self.supported_wms)}. If you do have one of the"
             " supported window systems, it's possible Hints failed to correctly"
             " identify it. You can set the window system you are"
             " using manually in your config file. Please refer to the wiki for"
