@@ -16,8 +16,8 @@ from typing import Any
 
 from gi import require_foreign, require_version
 
-from hints.mouse import click, do_mouse_action, move
-from hints.mouse_enums import MouseButton, MouseButtonState, MouseMode
+from hints.mouse import do_mouse_action, move
+from hints.mouse_enums import MouseMode
 from hints.utils import HintsConfig
 
 require_version("Gdk", "3.0")
