@@ -16,8 +16,8 @@ from typing import Any
 
 from gi import require_foreign, require_version
 
-from hints.mouse import do_mouse_action, move
-from hints.mouse_enums import MouseMode
+from hints.mouse import click, do_mouse_action, move
+from hints.mouse_enums import MouseButton, MouseButtonState, MouseMode
 from hints.utils import HintsConfig
 
 require_version("Gdk", "3.0")
@@ -96,6 +96,7 @@ class InterceptorWindow(Gtk.Window):
         keyval_lower = Gdk.keyval_to_lower(keyval)
 
         if keyval_lower == self.config["exit_key"]:
+            click(0, 0, MouseButton.LEFT, (MouseButtonState.UP,), absolute=False)
             Gtk.main_quit()
 
         if self.first_move:

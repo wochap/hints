@@ -9,27 +9,28 @@ process when creating virutal devices.
 
 from __future__ import annotations
 
-from multiprocessing.connection import Listener
+import socket
 from os import path, remove
+from pickle import dumps, loads
+from signal import SIGINT, signal
 from time import sleep, time
 from typing import TYPE_CHECKING, Any, Iterable
 
 from evdev import AbsInfo, UInput, ecodes
 from gi import require_version
 
-from hints.constants import SOCK_FILE
+from hints.constants import SOCKET_MESSAGE_SIZE, UNIX_DOMAIN_SOCKET_FILE
 from hints.mouse_enums import MouseButton, MouseMode
 from hints.utils import load_config
 
 require_version("Gdk", "3.0")
-from gi.repository import Gdk
-
-KEY_PRESS_STATE: dict[str, Any] = {}
+require_version("Gtk", "3.0")
+from gi.repository import Gdk, GLib, Gtk
 
 if TYPE_CHECKING:
     from hints.mouse_enums import MouseButtonState
 
-
+MOUSE_SERVICE_LOOP_MS_INTERVAL = 10
 config = load_config()
 
 
@@ -148,10 +149,11 @@ class Mouse:
                 self.relative_mouse.syn()
                 sleep(self.write_pause)
 
-        # small move to clear previous write incase the previous move wants to be
-        # repeated
-        self.move(x + 1, y, absolute=True)
-        self.move(x - 1, y, absolute=True)
+        if absolute:
+            # small move to clear previous write incase the previous move wants
+            # to be repeated
+            self.move(x + 1, y, absolute=True)
+            self.move(x - 1, y, absolute=True)
 
     def do_mouse_action(
         self,
@@ -215,30 +217,81 @@ class Mouse:
         return key_press_state
 
 
-def main():
-    """Mouse service entry point."""
-    screen = Gdk.Display.get_default().get_default_screen()
-    mouse = Mouse(screen.get_width(), screen.get_height())
+class MouseService:
+    """Mouse Service.
 
-    if path.exists(SOCK_FILE):
-        remove(SOCK_FILE)
+    This is responsible for running the mouse service and detecting
+    events requring the mouse devices to reload / be updated.
+    """
 
-    with Listener(SOCK_FILE) as listener:
-        while True:
-            with listener.accept() as conn:
+    def __init__(self):
+        """Mouse Service Constructor."""
+        Gtk.init()
 
-                payload = conn.recv()
-                method = payload.get("method", "")
-                args = payload.get("args", ())
-                kwargs = payload.get("kwargs", {})
-                conn.send(
+        self.screen = Gdk.Screen.get_default()
+        self.mouse = Mouse(self.screen.get_width(), self.screen.get_height())
+
+        if path.exists(UNIX_DOMAIN_SOCKET_FILE):
+            remove(UNIX_DOMAIN_SOCKET_FILE)
+
+        self.socket = socket.socket(
+            socket.AF_UNIX, socket.SOCK_STREAM | socket.SOCK_NONBLOCK
+        )
+        self.socket.bind(UNIX_DOMAIN_SOCKET_FILE)
+        self.socket.listen(1)
+        GLib.timeout_add(MOUSE_SERVICE_LOOP_MS_INTERVAL, self.socket_connection)
+
+        self.screen.connect("size-changed", self.on_size_changed)
+        signal(SIGINT, self.on_interrupt)
+
+    def on_interrupt(self, *_):
+        """Interrupt handler to clean up."""
+        self.socket.close()
+        Gtk.main_quit()
+
+    def on_size_changed(self, screen: Gdk.Screen):
+        """Screen size change event handler to update the mouse device min/max
+        values for correct absolute position movement.
+
+        :param screen: The screen object for the event.
+        """
+        self.mouse = Mouse(screen.get_width(), screen.get_height())
+
+    def socket_connection(self):
+        """Handle socket connection events.
+
+        This is how the main hints process and the mouse service
+        communicate.
+        """
+        try:
+            connection, _ = self.socket.accept()
+            payload = loads(connection.recv(SOCKET_MESSAGE_SIZE))
+            method = payload.get("method", "")
+            args = payload.get("args", ())
+            kwargs = payload.get("kwargs", {})
+            connection.send(
+                dumps(
                     {
-                        "click": mouse.click,
-                        "move": mouse.move,
-                        "scoll": mouse.scroll,
-                        "do_mouse_action": mouse.do_mouse_action,
+                        "click": self.mouse.click,
+                        "move": self.mouse.move,
+                        "scoll": self.mouse.scroll,
+                        "do_mouse_action": self.mouse.do_mouse_action,
                     }[method](*args, **kwargs)
                 )
+            )
+        except BlockingIOError:
+            pass
+
+        return GLib.SOURCE_CONTINUE
+
+    def run(self):
+        """Run the mouse service."""
+        Gtk.main()
+
+
+def main():
+    """Mouse service entry point."""
+    MouseService().run()
 
 
 if __name__ == "__main__":

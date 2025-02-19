@@ -79,7 +79,6 @@ class PostInstallCommand(install):
                     "Type=simple\n"
                     f"ExecStart={bin_dir}/hints-mouse\n"
                     "Restart=always\n"
-                    "Environment=XDG_SESSION_TYPE=$XDG_SESSION_TYPE\n"
                     "[Install]\n"
                     "WantedBy=default.target\n"
                 )

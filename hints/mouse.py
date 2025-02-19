@@ -8,10 +8,11 @@ Communication.
 
 from __future__ import annotations
 
-from multiprocessing.connection import Client
+from pickle import dumps, loads
+from socket import AF_UNIX, SOCK_STREAM, socket
 from typing import TYPE_CHECKING, Any
 
-from hints.constants import SOCK_FILE
+from hints.constants import SOCKET_MESSAGE_SIZE, UNIX_DOMAIN_SOCKET_FILE
 
 KEY_PRESS_STATE: dict[str, Any] = {}
 
@@ -36,18 +37,18 @@ def send_message(method: str, *args, **kwargs) -> Any:
     :raises CouldNotCommunicateWithTheMouseService: When the sock file
         does not exist (the mouse service creates this file).
     """
-    try:
-        with Client(SOCK_FILE) as conn:
-            conn.send(
+    with socket(AF_UNIX, SOCK_STREAM) as client:
+        client.connect(UNIX_DOMAIN_SOCKET_FILE)
+        client.sendall(
+            dumps(
                 {
                     "method": method,
                     "args": args,
                     "kwargs": kwargs,
                 }
             )
-            return conn.recv()
-    except FileNotFoundError as exc:
-        raise CouldNotCommunicateWithTheMouseService() from exc
+        )
+        return loads(client.recv(SOCKET_MESSAGE_SIZE))
 
 
 def scroll(x: int, y: int, *_args, **_kwargs):
