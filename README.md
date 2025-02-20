@@ -46,6 +46,7 @@ QT_LINUX_ACCESSIBILITY_ALWAYS_ON=1
 ```
 
 3. A Note about hintsd:
+
 Hints comes with a daemon used to perform mouse actions. Without starting the daemon, you won't be able to perform mouse actions. If you are using the latest version of pipx (which will be installed below), everything should just work, however, if you are not or choose not to use pipx, you will need to set the `HINTS_EXPECTED_BIN_DIR` environment variable prior to installing hints. This path tells the `setup.py` script where hintsd is installed to properly create the service file. When a recent version of pipx is used, this process is automatic. 
 
 4. Install hints:
