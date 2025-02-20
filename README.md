@@ -45,7 +45,10 @@ QT_ACCESSIBILITY=1
 QT_LINUX_ACCESSIBILITY_ALWAYS_ON=1
 ```
 
-3. Install hints:
+3. A Note about hintsd:
+Hints comes with a daemon used to perform mouse actions. Without starting the daemon, you won't be able to perform mouse actions. If you are using the latest version of pipx (which will be installed below), everything should just work, however, if you are not or choose not to use pipx, you will need to set the `HINTS_EXPECTED_BIN_DIR` environment variable prior to installing hints. This path tells the `setup.py` script where hintsd is installed to properly create the service file. When a recent version of pipx is used, this process is automatic. 
+
+4. Install hints:
 
 Below you will find installation instructions for some popular linux distros. The commands below assume that you're running wayland if your `XDG_SESSION_TYPE` variable is set to `wayland`. If that's the case you will install the wayland dependencies. Otherwise, the x11 dependencies will be installed. The setup is as follows:
 
