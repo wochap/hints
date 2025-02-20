@@ -55,11 +55,9 @@ Below you will find installation instructions for some popular linux distros. Th
 
 Ubuntu
 
-**Note: At the time of writing these docs, the ydotool package available for Ubuntu does not include a service, so if you want to use a service, [install it from source instead](https://github.com/ReimuNotMoe/ydotool/#compile)**
-
 ```
 sudo apt update && \
-    sudo apt install git ydotool libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-4.0 pipx && \
+    sudo apt install git libgirepository1.0-dev gcc libcairo2-dev pkg-config python3-dev gir1.2-gtk-4.0 pipx && \
     [ $XDG_SESSION_TYPE = "wayland" ] && sudo apt install gtk-layer-shell grim && \
     pipx ensurepath && \
     pipx install git+https://github.com/AlfredoSequeida/hints.git
@@ -68,7 +66,7 @@ sudo apt update && \
 Fedora
 
 ```
-sudo dnf install git ydotool gcc gobject-introspection-devel cairo-gobject-devel pkg-config python3-devel gtk4 pipx && \
+sudo dnf install git gcc gobject-introspection-devel cairo-gobject-devel pkg-config python3-devel gtk4 pipx && \
     [ $XDG_SESSION_TYPE = "wayland" ] && sudo dnf install gtk-layer-shell grim && \
     pipx ensurepath && \
     pipx install git+https://github.com/AlfredoSequeida/hints.git
@@ -78,7 +76,7 @@ Arch
 
 ```
 sudo pacman -Sy && \
-    sudo pacman -S git ydotool python cairo pkgconf gobject-introspection gtk4 python-pipx && \
+    sudo pacman -S git python cairo pkgconf gobject-introspection gtk4 python-pipx && \
     [ $XDG_SESSION_TYPE = "wayland" ] && sudo pacman -S gtk-layer-shell grim || sudo pacman -S libwnck3 && \
     pipx ensurepath && \
     pipx install git+https://github.com/AlfredoSequeida/hints.git
