@@ -2,7 +2,7 @@
 
 This module is a skeleton and does not contain any of the mouse logic.
 The mouse logic lives in mouse_service.py. This module communicates with
-the hints-mouse service via a Unix Domain Socket for Interprocess
+the hintsd service via a Unix Domain Socket for Interprocess
 Communication.
 """
 
@@ -24,7 +24,7 @@ class CouldNotCommunicateWithTheMouseService(Exception):
     """Exception to raise when the mouse service could not be reached."""
 
     def __str__(self):
-        return "Could not communicate with the hints-mouse service. Is it running?"
+        return "Could not communicate with the hintsd service. Is it running?"
 
 
 def send_message(method: str, *args, **kwargs) -> Any:

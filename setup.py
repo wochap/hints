@@ -12,10 +12,9 @@ class CouldNotFindExpectedInstallDirectory(Exception):
     def __str__(self):
         return (
             "Could not find expected install directory. This is required to"
-            " setup the hints-mouse service. If you are not using PIPX for"
-            " installation, set the 'HINTS_EXPECTED_BIN_DIR' environment"
-            " variable with the location hints will be installed in. For"
-            " example:"
+            " setup the hintsd service. Set the 'HINTS_EXPECTED_BIN_DIR'"
+            " environment variable with the location hints will be installed"
+            " in. For example:"
             " 'export HINTS_EXPECTED_BIN_DIR=\"$HOME/.local/bin\"'."
             " Then attemp to re-install."
         )
@@ -61,23 +60,23 @@ class PostInstallCommand(install):
 
         return bin_dir
 
-    def install_hints_mouse_service(self):
-        """Install hints-mouse service for the current user."""
+    def install_hintsd_service(self):
+        """Install hintsd service for the current user."""
         bin_dir = self.get_bin_dir()
         if bin_dir:
             user_service_directory = Path(path.expanduser("~")) / ".config/systemd/user"
             user_service_directory.mkdir(parents=True, exist_ok=True)
             with open(
-                user_service_directory / "hints-mouse.service",
+                user_service_directory / "hintsd.service",
                 mode="w+",
                 encoding="utf-8",
             ) as service_file:
                 service_file.write(
                     "[Unit]\n"
-                    "Description=Hints mouse service\n"
+                    "Description=Hints daemon\n"
                     "[Service]\n"
                     "Type=simple\n"
-                    f"ExecStart={bin_dir}/hints-mouse\n"
+                    f"ExecStart={bin_dir}/hintsd\n"
                     "Restart=always\n"
                     "[Install]\n"
                     "WantedBy=default.target\n"
@@ -86,7 +85,7 @@ class PostInstallCommand(install):
 
     def run(self):
         install.run(self)
-        self.install_hints_mouse_service()
+        self.install_hintsd_service()
 
 
 dynamic_version = find_version("hints", "__init__.py")
@@ -132,7 +131,7 @@ s = setup(
     entry_points={
         "console_scripts": [
             "hints = hints.hints:main",
-            "hints-mouse = hints.mouse_service:main",
+            "hintsd = hints.mouse_service:main",
         ]
     },
     cmdclass={"install": PostInstallCommand},
