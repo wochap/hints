@@ -10,6 +10,8 @@ from gi.repository import Atspi, Gdk
 
 CONFIG_PATH = path.join(path.expanduser("~"), ".config/hints/config.json")
 MOUSE_GRAB_PAUSE = 0.2
+UNIX_DOMAIN_SOCKET_FILE = "/tmp/hints.socket"
+SOCKET_MESSAGE_SIZE = 1024
 DEFAULT_CONFIG = {
     "hints": {
         "hint_height": 30,
@@ -102,4 +104,5 @@ DEFAULT_CONFIG = {
     "grab_modifier": Gdk.ModifierType.MOD1_MASK,  # Alt
     "overlay_x_offset": 0,
     "overlay_y_offset": 0,
+    "window_system": "",
 }

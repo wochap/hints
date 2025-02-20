@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 from gi import require_foreign, require_version
 
+from hints.mouse_enums import MouseButton
 from hints.utils import HintsConfig
 
 require_version("Gdk", "3.0")
@@ -240,7 +241,7 @@ class OverlayWindow(Gtk.Window):
             self.mouse_action.update({"action": "grab"})
 
         if keyval_lower != keyval:
-            self.mouse_action.update({"action": "click", "button": "right"})
+            self.mouse_action.update({"action": "click", "button": MouseButton.RIGHT})
 
         hint_chr = chr(keyval_lower)
 
@@ -262,7 +263,7 @@ class OverlayWindow(Gtk.Window):
                     "x": x + x_offset,
                     "y": y + y_offset,
                     "repeat": self.mouse_action.get("repeat", 1),
-                    "button": self.mouse_action.get("button", "left"),
+                    "button": self.mouse_action.get("button", MouseButton.LEFT),
                 }
             )
 
