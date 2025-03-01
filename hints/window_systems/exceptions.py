@@ -30,7 +30,7 @@ class WindowSystemNotSupported(Exception):
         """String representation of exception."""
         return (
             "This window system is not supported, hints only supports one of: "
-            f" {", ".join(self.supported_wms)}. To request support open an"
+            f" {', '.join(self.supported_wms)}. To request support open an"
             " issue: https://github.com/AlfredoSequeida/hints/issues."
         )
 
