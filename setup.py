@@ -81,7 +81,6 @@ class PostInstallCommand(install):
                     "[Install]\n"
                     "WantedBy=default.target\n"
                 )
-            run(["systemctl", "--user", "daemon-reload"], check=False)
 
     def run(self):
         install.run(self)
@@ -127,7 +126,14 @@ s = setup(
     license="GPLv3",
     packages=["hints", "hints.backends", "hints.huds", "hints.window_systems"],
     include_package_data=True,
-    install_requires=["PyGObject", "pillow", "pyscreenshot", "opencv-python", "evdev"],
+    install_requires=[
+        "PyGObject",
+        "pillow",
+        "pyscreenshot",
+        "opencv-python",
+        "evdev",
+        "dbus-python",
+    ],
     entry_points={
         "console_scripts": [
             "hints = hints.hints:main",
