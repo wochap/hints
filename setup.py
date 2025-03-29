@@ -141,5 +141,4 @@ s = setup(
         ]
     },
     cmdclass={"install": PostInstallCommand},
-    scripts=["hints/scripts/kwin/active_window_information.mjs"],
 )
