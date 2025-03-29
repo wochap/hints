@@ -20,7 +20,6 @@ class Plasmashell(WindowSystem):
             files("hints") / "scripts/kwin/active_window_information.mjs"
         ) as path:
             self._active_window = self._run_kwin_script(str(path))
-            print(self._active_window)
 
     def _run_kwin_script(self, kwin_script_path: str) -> Any:
         """Run KWin script at the given path that returns output in JSON format
