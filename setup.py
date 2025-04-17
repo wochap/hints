@@ -84,7 +84,7 @@ class PostInstallCommand(install):
 
     def run(self):
         install.run(self)
-        self.install_hintsd_service()
+        # self.install_hintsd_service()
 
 
 dynamic_version = find_version("hints", "__init__.py")
